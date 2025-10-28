@@ -118,16 +118,115 @@ function showSavedImage() {
 TEMPLATE_LIST = """<html>
 <head><meta charset='utf-8'><title>Список ГОСТов</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; color: #333; height: 100vh; display: flex; justify-content: center; align-items: center; }
-.container { width: 800px; }
-table { border-collapse: collapse; width: 100%; background: #fff; border-radius: 4px; overflow: hidden; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-th { background: #f0f0f0; }
-a { text-decoration: none; color: #333; margin-right: 6px; }
+body {
+  font-family: "Segoe UI", sans-serif;
+  color: #fff;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+video#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(0.4);
+}
+
+.container {
+  width: 800px;
+  margin: 40px auto;
+  background: rgba(0,0,0,0.6);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+h1 {
+  text-align: center;
+  font-weight: 400;
+  margin-bottom: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+th {
+  background: rgba(255,255,255,0.2);
+}
+
+a {
+  text-decoration: none;
+  color: #fff;
+  margin-right: 10px;
+}
 a:hover { text-decoration: underline; }
+
+/* Модальное окно */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #222;
+  padding: 20px 30px;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.modal-content button {
+  margin: 10px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.btn-confirm {
+  background: #28a745;
+  color: white;
+}
+.btn-cancel {
+  background: #dc3545;
+  color: white;
+}
+.btn-confirm:hover { background: #218838; }
+.btn-cancel:hover { background: #c82333; }
+
+p { text-align: center; margin-top: 20px; }
 </style>
 </head>
 <body>
+
+<video autoplay muted loop id="bgVideo">
+  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+</video>
+
 <div class="container">
 <h1>📋 Список ГОСТов</h1>
 <table>
@@ -137,15 +236,45 @@ a:hover { text-decoration: underline; }
 <td>{{ gost }}</td>
 <td>{{ text }}</td>
 <td>
-    <a href='{{ url_for("edit_gost", gost=gost) }}'>✏️</a>
-    <a href='{{ url_for("delete_gost", gost=gost) }}'
-       onclick="return confirm('Вы действительно хотите удалить ГОСТ {{ gost }}?');">🗑</a>
+  <a href="{{ url_for('edit_gost', gost=gost) }}">✏️</a>
+  <a href="#" onclick="confirmDelete('{{ gost }}')">🗑</a>
 </td>
 </tr>
 {% endfor %}
 </table>
 <p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
 </div>
+
+<!-- Модальное окно -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h2>Удалить ГОСТ?</h2>
+    <p id="modalGostName"></p>
+    <button class="btn-confirm" id="confirmDelete">✅ Да</button>
+    <button class="btn-cancel" onclick="closeModal()">❌ Отмена</button>
+  </div>
+</div>
+
+<script>
+let deleteGost = null;
+
+function confirmDelete(gost) {
+  deleteGost = gost;
+  document.getElementById('modalGostName').textContent = gost;
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+document.getElementById('confirmDelete').onclick = function() {
+  if (deleteGost) {
+    window.location.href = '/delete/' + encodeURIComponent(deleteGost);
+  }
+};
+</script>
+
 </body>
 </html>"""
 
@@ -235,4 +364,5 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
