@@ -6,71 +6,83 @@ app = Flask(__name__)
 
 DATA_FILE = "gost_data.json"
 
-# Загружаем базу ГОСТов
+# ---------- Функции работы с базой ----------
+
 def load_data():
+    """Загрузка базы ГОСТов из JSON файла"""
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
-# Сохраняем базу ГОСТов
 def save_data(data):
+    """Сохранение базы ГОСТов в JSON файл"""
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+# ---------- Главная страница (поиск) ----------
+
 @app.route("/", methods=["GET", "POST"])
 def index():
-    gost_data = load_data()
+    data = load_data()
     search_query = request.args.get("q", "").lower().strip()
     results = {}
 
     if search_query:
-       for gost, text in data.items():
-    # Преобразуем пункты в одну строку (если это список)
-    text_combined = " ".join(text) if isinstance(text, list) else str(text)
+        for gost, text in data.items():
+            # Преобразуем пункты в строку (если это список)
+            text_combined = " ".join(text) if isinstance(text, list) else str(text)
 
-    if search_query in gost.lower() or search_query in text_combined.lower():
-        results[gost] = text
+            if search_query in gost.lower() or search_query in text_combined.lower():
+                results[gost] = text_combined
 
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
 
+# ---------- Добавление нового ГОСТа ----------
+
 @app.route("/add", methods=["GET", "POST"])
 def add_gost():
-    gost_data = load_data()
+    data = load_data()
     if request.method == "POST":
         gost_number = request.form["gost_number"].strip()
         gost_text = request.form["gost_text"].strip()
         if gost_number and gost_text:
-            gost_data[gost_number] = gost_text
-            save_data(gost_data)
+            data[gost_number] = gost_text
+            save_data(data)
             return redirect(url_for("index"))
     return render_template_string(TEMPLATE_ADD)
 
+# ---------- Список всех ГОСТов ----------
+
 @app.route("/list")
 def list_gosts():
-    gost_data = load_data()
-    return render_template_string(TEMPLATE_LIST, gost_data=gost_data)
+    data = load_data()
+    return render_template_string(TEMPLATE_LIST, gost_data=data)
+
+# ---------- Редактирование ГОСТа ----------
 
 @app.route("/edit/<gost>", methods=["GET", "POST"])
 def edit_gost(gost):
-    gost_data = load_data()
-    if gost not in gost_data:
+    data = load_data()
+    if gost not in data:
         return "ГОСТ не найден", 404
 
     if request.method == "POST":
         new_text = request.form["gost_text"].strip()
-        gost_data[gost] = new_text
-        save_data(gost_data)
+        data[gost] = new_text
+        save_data(data)
         return redirect(url_for("list_gosts"))
 
-    return render_template_string(TEMPLATE_EDIT, gost=gost, text=gost_data[gost])
+    return render_template_string(TEMPLATE_EDIT, gost=gost, text=data[gost])
+
+# ---------- Удаление ГОСТа ----------
 
 @app.route("/delete/<gost>")
 def delete_gost(gost):
-    gost_data = load_data()
-    if gost in gost_data:
-        del gost_data[gost]
-        save_data(gost_data)
+    data = load_data()
+    if gost in data:
+        del data[gost]
+        save_data(data)
     return redirect(url_for("list_gosts"))
 
 # ---------- HTML шаблоны ----------
@@ -195,10 +207,9 @@ TEMPLATE_EDIT = """
 </html>
 """
 
+# ---------- Запуск приложения ----------
+
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
-
-
