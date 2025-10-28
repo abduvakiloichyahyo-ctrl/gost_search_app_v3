@@ -55,29 +55,123 @@ def push_to_github():
 TEMPLATE_INDEX = """<html>
 <head><meta charset='utf-8'><title>Поиск ГОСТов</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; color: #333; height: 100vh; display: flex; justify-content: center; align-items: center; }
-.container { width: 600px; }
-h1 { font-weight: 400; text-align: center; }
-input[type=text] { padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
-button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
-button:hover { background: #555; }
-a { text-decoration: none; color: #333; margin-right: 10px; }
+body {
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* Фоновое видео */
+video#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* Затемняющий слой */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  z-index: -1;
+}
+
+.container {
+  position: relative;
+  z-index: 2;
+  width: 600px;
+  margin: auto;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.08);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+}
+
+h1 {
+  font-weight: 300;
+  margin-bottom: 20px;
+}
+
+input[type=text] {
+  padding: 10px;
+  width: 65%;
+  border: none;
+  border-radius: 4px;
+  outline: none;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px 18px;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+button:hover {
+  background: #0056b3;
+}
+
+a {
+  text-decoration: none;
+  color: #fff;
+  margin: 0 10px;
+}
 a:hover { text-decoration: underline; }
-div.result { background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
-.saved-image { display: none; width: 100px; margin: 10px auto; }
+
+div.result {
+  background: rgba(255,255,255,0.1);
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+}
 </style>
 </head>
 <body>
+
+<!-- Видео -->
+<video autoplay muted loop id="bgVideo">
+  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+</video>
+
+<!-- Затемнение -->
+<div class="overlay"></div>
+
 <div class="container">
-<h1>🔍 Поиск ГОСТов</h1>
-<form method='get'>
-<input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
-<button type='submit'>Искать</button>
-</form>
-<p><a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> | <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a></p>
-{% if results %}<h2>Результаты:</h2>{% for gost, text in results.items() %}
-<div class="result"><b>{{ gost }}</b><br>{{ text }}</div>{% endfor %}{% elif query %}<p>Ничего не найдено.</p>{% endif %}
+  <h1>🔍 Поиск ГОСТов</h1>
+  <form method='get'>
+    <input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
+    <button type='submit'>Искать</button>
+  </form>
+  <p>
+    <a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> |
+    <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a>
+  </p>
+  {% if results %}
+  <h2>Результаты:</h2>
+  {% for gost, text in results.items() %}
+    <div class="result"><b>{{ gost }}</b><br>{{ text }}</div>
+  {% endfor %}
+  {% elif query %}
+  <p>Ничего не найдено.</p>
+  {% endif %}
 </div>
+
 </body>
 </html>"""
 
@@ -364,5 +458,6 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
