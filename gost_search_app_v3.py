@@ -178,66 +178,7 @@ window.onload = () => {
 </html>"""
 
 
-TEMPLATE_ADD = """<html>
-<head><meta charset='utf-8'><title>Добавить ГОСТ</title>
-<style>
-body { font-family: "Segoe UI", sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
-h1 { font-weight: 400; }
-input, textarea { width: 400px; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
-button:hover { background: #555; }
-a { text-decoration: none; color: #333; }
-a:hover { text-decoration: underline; }
-
-/* --- окно с картинкой "сохранено" --- */
-#saved {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(255,255,255,0.9);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; visibility: hidden;
-  transition: opacity 0.5s ease;
-}
-#saved.show {
-  opacity: 1; visibility: visible;
-}
-#saved img {
-  width: 180px; height: auto;
-  animation: pop 0.6s ease;
-}
-@keyframes pop {
-  from { transform: scale(0.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-</style>
-
-<script>
-function showSaved() {
-  const saved = document.getElementById('saved');
-  saved.classList.add('show');
-  setTimeout(() => {
-    window.location.href = '/';
-  }, 1500); // 1.5 секунды
-  return false; // предотвратить немедленную отправку формы
-}
-</script>
-</head>
-<body>
-
-<div id="saved">
-  <img src="{{ url_for('static', filename='saved.png') }}" alt="Сохранено!">
-</div>
-
-<h1>Добавить новый ГОСТ</h1>
-<form method='post' onsubmit="return showSaved()">
-  <input type='text' name='gost_number' placeholder='Номер ГОСТа'><br>
-  <textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6"></textarea><br>
-  <button type='submit'>Сохранить</button>
-</form>
-<p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
-
-</body>
-</html>"""
+https://gost-search-app-v3.onrender.com
 
 TEMPLATE_LIST = """<html>
 <head><meta charset='utf-8'><title>Список ГОСТов</title>
@@ -293,6 +234,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
