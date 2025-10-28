@@ -118,11 +118,11 @@ a { text-decoration: none; color: #333; margin-right: 10px; }
 a:hover { text-decoration: underline; }
 div.result { background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
 
-/* --- Стиль анимации загрузки --- */
+/* --- Анимация загрузки --- */
 #loading {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.9);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; visibility: hidden;
   transition: opacity 0.8s ease;
@@ -132,28 +132,27 @@ div.result { background: #fff; padding: 10px; margin-bottom: 8px; border-radius:
   visibility: visible;
 }
 #loading img {
-  width: 120px;
-  animation: spin 2s linear infinite;
+  width: 150px;
+  height: auto;
+  animation: fadeIn 1s ease;
 }
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>
 <script>
 function showLoading() {
-  const loader = document.getElementById('loading');
-  loader.classList.add('show');
+  document.getElementById('loading').classList.add('show');
 }
 window.onload = () => {
-  const loader = document.getElementById('loading');
-  loader.classList.remove('show');
+  document.getElementById('loading').classList.remove('show');
 };
 </script>
 </head>
 <body>
 <div id="loading">
-  <img src="https://i.imgur.com/llF5iyg.png" alt="Загрузка...">
+  <img src="{{ url_for('static', filename='loader.png') }}" alt="Загрузка...">
 </div>
 
 <h1>🔍 Поиск ГОСТов</h1>
@@ -177,6 +176,7 @@ window.onload = () => {
 {% endif %}
 </body>
 </html>"""
+
 
 TEMPLATE_ADD = """<html>
 <head><meta charset='utf-8'><title>Добавить ГОСТ</title>
@@ -255,4 +255,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
+
 
