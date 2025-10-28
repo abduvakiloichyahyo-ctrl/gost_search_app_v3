@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>🔍 Поиск ГОСТов</h1>
+<form method="get">
+    <input type="text" name="q" value="{{ query }}" placeholder="Введите номер ГОСТа...">
+    <button type="submit">Искать</button>
+</form>
+<p><a href="{{ url_for('add_gost') }}">➕ Добавить ГОСТ</a> | <a href="{{ url_for('list_gosts') }}">📋 Список ГОСТов</a></p>
+
+{% if results %}
+    {% for gost, text in results.items() %}
+        <div><b>{{ gost }}</b><br>{{ text }}</div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
