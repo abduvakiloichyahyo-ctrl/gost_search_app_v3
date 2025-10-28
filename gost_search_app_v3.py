@@ -178,7 +178,6 @@ window.onload = () => {
 </html>"""
 
 
-https://gost-search-app-v3.onrender.com
 
 TEMPLATE_LIST = """<html>
 <head><meta charset='utf-8'><title>Список ГОСТов</title>
@@ -234,6 +233,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
