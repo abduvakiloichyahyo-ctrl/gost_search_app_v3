@@ -25,9 +25,12 @@ def index():
     results = {}
 
     if search_query:
-        for gost, text in gost_data.items():
-            if search_query in gost.lower() or search_query in text.lower():
-                results[gost] = text
+        for gost, text in data.items():
+    # Преобразуем пункты в одну строку (если это список)
+    text_combined = " ".join(text) if isinstance(text, list) else str(text)
+    
+    if search_query in gost.lower() or search_query in text_combined.lower():
+        results[gost] = text
 
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
 
@@ -197,3 +200,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
+
