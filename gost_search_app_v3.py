@@ -107,7 +107,7 @@ def delete_gost(gost):
 
 # ---------- Минималистичные HTML шаблоны ----------
 TEMPLATE_INDEX = """<html>
-<head><meta charset='utf-8'><title>Поиск ГОСТов</title>
+<head><meta charset='utf-8'><title>Поиск</title>
 <style>
 body { font-family: "Segoe UI", sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
 h1 { font-weight: 400; }
@@ -293,6 +293,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
