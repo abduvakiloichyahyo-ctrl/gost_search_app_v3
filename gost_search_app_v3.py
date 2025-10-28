@@ -178,36 +178,53 @@ div.result {
 TEMPLATE_ADD = """<html>
 <head><meta charset='utf-8'><title>Добавить ГОСТ</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; color: #333; height: 100vh; display: flex; justify-content: center; align-items: center; }
-.container { width: 500px; text-align: center; background: #fff; padding: 20px; border-radius: 8px; }
-input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
-button:hover { background: #555; }
-a { text-decoration: none; color: #333; }
+body { font-family: "Segoe UI", sans-serif; margin: 0; height: 100vh; overflow: hidden; color: #fff; }
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
+.container {
+  position: relative; z-index: 2; width: 500px; margin: auto; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center;
+}
+h1 { font-weight: 300; margin-bottom: 20px; }
+input, textarea {
+  width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px;
+}
+button {
+  padding: 10px 18px; border: none; background: #28a745; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px;
+}
+button:hover { background: #218838; }
+a { color: #fff; text-decoration: none; }
 a:hover { text-decoration: underline; }
 .saved-image { display: none; width: 100px; margin: 10px auto; }
 </style>
 <script>
 function showSavedImage() {
-    const img = document.getElementById('savedImage');
-    img.style.display = 'block';
-    setTimeout(() => { img.style.display = 'none'; }, 1500);
+  const img = document.getElementById('savedImage');
+  img.style.display = 'block';
+  setTimeout(() => { img.style.display = 'none'; }, 1500);
 }
 </script>
 </head>
 <body>
+<video autoplay muted loop id="bgVideo">
+  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
 <div class="container">
-<h1>Добавить новый ГОСТ</h1>
+<h1>➕ Добавить ГОСТ</h1>
 <form method='post' onsubmit="showSavedImage()">
 <input type='text' name='gost_number' placeholder='Номер ГОСТа' required><br>
 <textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6" required></textarea><br>
-<button type='submit'>Сохранить</button>
+<button type='submit'>💾 Сохранить</button>
 </form>
 <img id="savedImage" src="{{ url_for('static', filename='saved.png') }}" class="saved-image">
 <p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
 </div>
 </body>
 </html>"""
+
 
 TEMPLATE_LIST = """<html>
 <head><meta charset='utf-8'><title>Список ГОСТов</title>
@@ -375,26 +392,42 @@ document.getElementById('confirmDelete').onclick = function() {
 TEMPLATE_EDIT = """<html>
 <head><meta charset='utf-8'><title>Редактировать ГОСТ</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; color: #333; height: 100vh; display: flex; justify-content: center; align-items: center; }
-.container { width: 500px; text-align: center; background: #fff; padding: 20px; border-radius: 8px; }
-textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; }
-button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
-button:hover { background: #555; }
-a { text-decoration: none; color: #333; }
+body { font-family: "Segoe UI", sans-serif; margin: 0; height: 100vh; overflow: hidden; color: #fff; }
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
+.container {
+  position: relative; z-index: 2; width: 500px; margin: auto; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center;
+}
+h1 { font-weight: 300; margin-bottom: 20px; }
+textarea {
+  width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px;
+}
+button {
+  padding: 10px 18px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px;
+}
+button:hover { background: #0056b3; }
+a { color: #fff; text-decoration: none; }
 a:hover { text-decoration: underline; }
 .saved-image { display: none; width: 100px; margin: 10px auto; }
 </style>
 <script>
 function showSavedImage() {
-    const img = document.getElementById('savedImage');
-    img.style.display = 'block';
-    setTimeout(() => { img.style.display = 'none'; }, 1500);
+  const img = document.getElementById('savedImage');
+  img.style.display = 'block';
+  setTimeout(() => { img.style.display = 'none'; }, 1500);
 }
 </script>
 </head>
 <body>
+<video autoplay muted loop id="bgVideo">
+  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
 <div class="container">
-<h1>Редактировать {{ gost }}</h1>
+<h1>✏️ Редактировать {{ gost }}</h1>
 <form method='post' onsubmit="showSavedImage()">
 <textarea name='gost_text' rows="6" required>{{ text }}</textarea><br>
 <button type='submit'>💾 Сохранить</button>
@@ -458,6 +491,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
