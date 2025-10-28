@@ -51,9 +51,13 @@ def push_to_github():
     except Exception as e:
         print("⚠ Ошибка при отправке в GitHub:", e)
 
-# ---------- Минималистичные HTML шаблоны ----------
+
+# ---------- HTML шаблоны с иконкой и заголовком ----------
 TEMPLATE_INDEX = """<html>
-<head><meta charset='utf-8'><title>Поиск ГОСТов</title>
+<head>
+<meta charset='utf-8'>
+<title>ГОСТ База — Поиск ГОСТов</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
 body {
   font-family: "Segoe UI", sans-serif;
@@ -62,94 +66,29 @@ body {
   overflow: hidden;
   color: #fff;
 }
-
-/* Фоновое видео */
-video#bgVideo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  min-width: 100%;
-  min-height: 100%;
-  object-fit: cover;
-  z-index: -2;
-}
-
-/* Затемняющий слой */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.55);
-  z-index: -1;
-}
-
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
 .container {
-  position: relative;
-  z-index: 2;
-  width: 600px;
-  margin: auto;
-  text-align: center;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.08);
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  position: relative; z-index: 2; width: 600px; margin: auto; text-align: center; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4);
   backdrop-filter: blur(8px);
 }
-
-h1 {
-  font-weight: 300;
-  margin-bottom: 20px;
-}
-
-input[type=text] {
-  padding: 10px;
-  width: 65%;
-  border: none;
-  border-radius: 4px;
-  outline: none;
-  font-size: 16px;
-}
-
+h1 { font-weight: 300; margin-bottom: 20px; }
+input[type=text] { padding: 10px; width: 65%; border: none; border-radius: 4px; outline: none; font-size: 16px; }
 button {
-  padding: 10px 18px;
-  border: none;
-  background: #007bff;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
+  padding: 10px 18px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px;
 }
-button:hover {
-  background: #0056b3;
-}
-
-a {
-  text-decoration: none;
-  color: #fff;
-  margin: 0 10px;
-}
+button:hover { background: #0056b3; }
+a { text-decoration: none; color: #fff; margin: 0 10px; }
 a:hover { text-decoration: underline; }
-
-div.result {
-  background: rgba(255,255,255,0.1);
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 6px;
-}
+div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; }
 </style>
 </head>
 <body>
 
-<!-- Видео -->
 <video autoplay muted loop id="bgVideo">
   <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
 </video>
-
-<!-- Затемнение -->
 <div class="overlay"></div>
 
 <div class="container">
@@ -176,7 +115,10 @@ div.result {
 </html>"""
 
 TEMPLATE_ADD = """<html>
-<head><meta charset='utf-8'><title>Добавить ГОСТ</title>
+<head>
+<meta charset='utf-8'>
+<title>ГОСТ База — Добавить ГОСТ</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
 body { font-family: "Segoe UI", sans-serif; margin: 0; height: 100vh; overflow: hidden; color: #fff; }
 video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
@@ -227,7 +169,10 @@ function showSavedImage() {
 
 
 TEMPLATE_LIST = """<html>
-<head><meta charset='utf-8'><title>Список ГОСТов</title>
+<head>
+<meta charset='utf-8'>
+<title>ГОСТ База — Список ГОСТов</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
 body {
   font-family: "Segoe UI", sans-serif;
@@ -236,18 +181,7 @@ body {
   margin: 0;
   overflow: hidden;
 }
-
-video#bgVideo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  min-width: 100%;
-  min-height: 100%;
-  object-fit: cover;
-  z-index: -1;
-  filter: brightness(0.4);
-}
-
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -1; filter: brightness(0.4); }
 .container {
   width: 800px;
   margin: 40px auto;
@@ -256,79 +190,24 @@ video#bgVideo {
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
 }
-
-h1 {
-  text-align: center;
-  font-weight: 400;
-  margin-bottom: 20px;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  background: rgba(255,255,255,0.1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-th, td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  color: #fff;
-}
-
-th {
-  background: rgba(255,255,255,0.2);
-}
-
-a {
-  text-decoration: none;
-  color: #fff;
-  margin-right: 10px;
-}
+h1 { text-align: center; font-weight: 400; margin-bottom: 20px; }
+table { border-collapse: collapse; width: 100%; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff; }
+th { background: rgba(255,255,255,0.2); }
+a { text-decoration: none; color: #fff; margin-right: 10px; }
 a:hover { text-decoration: underline; }
-
-/* Модальное окно */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.7);
-  justify-content: center;
-  align-items: center;
-}
-
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
 .modal-content {
-  background: #222;
-  padding: 20px 30px;
-  border-radius: 10px;
-  text-align: center;
-  color: #fff;
+  background: #222; padding: 20px 30px; border-radius: 10px; text-align: center; color: #fff;
   box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
-
 .modal-content button {
-  margin: 10px;
-  padding: 8px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 15px;
+  margin: 10px; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 15px;
 }
-
-.btn-confirm {
-  background: #28a745;
-  color: white;
-}
-.btn-cancel {
-  background: #dc3545;
-  color: white;
-}
+.btn-confirm { background: #28a745; color: white; }
+.btn-cancel { background: #dc3545; color: white; }
 .btn-confirm:hover { background: #218838; }
 .btn-cancel:hover { background: #c82333; }
-
 p { text-align: center; margin-top: 20px; }
 </style>
 </head>
@@ -356,7 +235,6 @@ p { text-align: center; margin-top: 20px; }
 <p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
 </div>
 
-<!-- Модальное окно -->
 <div id="deleteModal" class="modal">
   <div class="modal-content">
     <h2>Удалить ГОСТ?</h2>
@@ -368,29 +246,28 @@ p { text-align: center; margin-top: 20px; }
 
 <script>
 let deleteGost = null;
-
 function confirmDelete(gost) {
   deleteGost = gost;
   document.getElementById('modalGostName').textContent = gost;
   document.getElementById('deleteModal').style.display = 'flex';
 }
-
 function closeModal() {
   document.getElementById('deleteModal').style.display = 'none';
 }
-
 document.getElementById('confirmDelete').onclick = function() {
   if (deleteGost) {
     window.location.href = '/delete/' + encodeURIComponent(deleteGost);
   }
 };
 </script>
-
 </body>
 </html>"""
 
 TEMPLATE_EDIT = """<html>
-<head><meta charset='utf-8'><title>Редактировать ГОСТ</title>
+<head>
+<meta charset='utf-8'>
+<title>ГОСТ База — Редактировать ГОСТ</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
 body { font-family: "Segoe UI", sans-serif; margin: 0; height: 100vh; overflow: hidden; color: #fff; }
 video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
@@ -401,9 +278,7 @@ video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 1
   box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center;
 }
 h1 { font-weight: 300; margin-bottom: 20px; }
-textarea {
-  width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px;
-}
+textarea { width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px; }
 button {
   padding: 10px 18px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px;
 }
@@ -437,6 +312,7 @@ function showSavedImage() {
 </div>
 </body>
 </html>"""
+
 
 # ---------- Flask маршруты ----------
 @app.route("/", methods=["GET"])
