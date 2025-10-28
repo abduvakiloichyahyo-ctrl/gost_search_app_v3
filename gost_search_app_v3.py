@@ -37,16 +37,11 @@ def save_data(data):
 # --- Отправляем файл в GitHub ---
 def push_to_github():
     try:
-        # 1. Считываем локальный файл
         with open(DATA_FILE, "rb") as f:
             content = f.read()
         encoded = base64.b64encode(content).decode()
-
-        # 2. Получаем SHA текущей версии файла
         file_info = github_api_request("GET", f"contents/{GITHUB_FILE_PATH}")
         sha = file_info.get("sha")
-
-        # 3. Отправляем обновлённый файл
         github_api_request("PUT", f"contents/{GITHUB_FILE_PATH}", {
             "message": "Автообновление gost_data.json через сайт",
             "content": encoded,
@@ -57,7 +52,7 @@ def push_to_github():
         print("⚠ Ошибка при отправке в GitHub:", e)
 
 # --- Flask маршруты ---
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
     data = load_data()
     search_query = request.args.get("q", "").lower().strip()
@@ -110,36 +105,104 @@ def delete_gost(gost):
         save_data(data)
     return redirect(url_for("list_gosts"))
 
-# ---------- HTML шаблоны (без изменений) ----------
-TEMPLATE_INDEX = """<html><head><meta charset='utf-8'><title>Поиск ГОСТов</title></head>
-<body><h1>🔍 Поиск ГОСТов</h1>
-<form method='get'><input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
-<button type='submit'>Искать</button></form>
+# ---------- Минималистичные HTML шаблоны ----------
+TEMPLATE_INDEX = """<html>
+<head><meta charset='utf-8'><title>Поиск ГОСТов</title>
+<style>
+body { font-family: "Segoe UI", sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
+h1 { font-weight: 400; }
+input[type=text] { padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
+button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
+button:hover { background: #555; }
+a { text-decoration: none; color: #333; margin-right: 10px; }
+a:hover { text-decoration: underline; }
+div.result { background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>🔍 Поиск ГОСТов</h1>
+<form method='get'>
+<input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
+<button type='submit'>Искать</button>
+</form>
 <p><a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> | <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a></p>
 {% if results %}<h2>Результаты:</h2>{% for gost, text in results.items() %}
-<div><b>{{ gost }}</b><br>{{ text }}</div>{% endfor %}{% elif query %}<p>Ничего не найдено.</p>{% endif %}</body></html>"""
+<div class="result"><b>{{ gost }}</b><br>{{ text }}</div>{% endfor %}{% elif query %}<p>Ничего не найдено.</p>{% endif %}
+</body>
+</html>"""
 
-TEMPLATE_ADD = """<html><head><meta charset='utf-8'><title>Добавить ГОСТ</title></head>
-<body><h1>Добавить новый ГОСТ</h1><form method='post'>
-<p>Номер ГОСТа:<br><input type='text' name='gost_number'></p>
-<p>Пункты:<br><textarea name='gost_text'></textarea></p>
-<button type='submit'>Сохранить</button></form>
-<p><a href='{{ url_for("index") }}'>⬅ Назад</a></p></body></html>"""
+TEMPLATE_ADD = """<html>
+<head><meta charset='utf-8'><title>Добавить ГОСТ</title>
+<style>
+body { font-family: "Segoe UI", sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
+h1 { font-weight: 400; }
+input, textarea { width: 400px; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
+button:hover { background: #555; }
+a { text-decoration: none; color: #333; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>Добавить новый ГОСТ</h1>
+<form method='post'>
+<input type='text' name='gost_number' placeholder='Номер ГОСТа'><br>
+<textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6"></textarea><br>
+<button type='submit'>Сохранить</button>
+</form>
+<p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
+</body>
+</html>"""
 
-TEMPLATE_LIST = """<html><head><meta charset='utf-8'><title>Список ГОСТов</title></head>
-<body><h1>📋 Список ГОСТов</h1><table border=1>
+TEMPLATE_LIST = """<html>
+<head><meta charset='utf-8'><title>Список ГОСТов</title>
+<style>
+body { font-family: "Segoe UI", sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
+h1 { font-weight: 400; }
+table { border-collapse: collapse; width: 100%; background: #fff; border-radius: 4px; overflow: hidden; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f0f0f0; }
+a { text-decoration: none; color: #333; margin-right: 6px; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>📋 Список ГОСТов</h1>
+<table>
 <tr><th>Номер</th><th>Текст</th><th>Действия</th></tr>
 {% for gost, text in gost_data.items() %}
-<tr><td>{{ gost }}</td><td>{{ text }}</td>
-<td><a href='{{ url_for("edit_gost", gost=gost) }}'>✏️</a> | 
-<a href='{{ url_for("delete_gost", gost=gost) }}'>🗑</a></td></tr>{% endfor %}
-</table><p><a href='{{ url_for("index") }}'>⬅ Назад</a></p></body></html>"""
+<tr>
+<td>{{ gost }}</td>
+<td>{{ text }}</td>
+<td><a href='{{ url_for("edit_gost", gost=gost) }}'>✏️</a> <a href='{{ url_for("delete_gost", gost=gost) }}'>🗑</a></td>
+</tr>
+{% endfor %}
+</table>
+<p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
+</body>
+</html>"""
 
-TEMPLATE_EDIT = """<html><head><meta charset='utf-8'><title>Редактировать ГОСТ</title></head>
-<body><h1>Редактировать {{ gost }}</h1>
-<form method='post'><textarea name='gost_text'>{{ text }}</textarea><br>
-<button type='submit'>💾 Сохранить</button></form>
-<p><a href='{{ url_for("list_gosts") }}'>⬅ Назад</a></p></body></html>"""
+TEMPLATE_EDIT = """<html>
+<head><meta charset='utf-8'><title>Редактировать ГОСТ</title>
+<style>
+body { font-family: "Segoe UI", sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
+h1 { font-weight: 400; }
+textarea { width: 400px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; }
+button { padding: 8px 16px; border: none; background: #333; color: #fff; border-radius: 4px; cursor: pointer; }
+button:hover { background: #555; }
+a { text-decoration: none; color: #333; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>Редактировать {{ gost }}</h1>
+<form method='post'>
+<textarea name='gost_text' rows="6">{{ text }}</textarea><br>
+<button type='submit'>💾 Сохранить</button>
+</form>
+<p><a href='{{ url_for("list_gosts") }}'>⬅ Назад</a></p>
+</body>
+</html>"""
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
