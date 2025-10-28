@@ -117,17 +117,64 @@ button:hover { background: #555; }
 a { text-decoration: none; color: #333; margin-right: 10px; }
 a:hover { text-decoration: underline; }
 div.result { background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
+
+/* --- Стиль анимации загрузки --- */
+#loading {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.8s ease;
+}
+#loading.show {
+  opacity: 1;
+  visibility: visible;
+}
+#loading img {
+  width: 120px;
+  animation: spin 2s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 </style>
+<script>
+function showLoading() {
+  const loader = document.getElementById('loading');
+  loader.classList.add('show');
+}
+window.onload = () => {
+  const loader = document.getElementById('loading');
+  loader.classList.remove('show');
+};
+</script>
 </head>
 <body>
+<div id="loading">
+  <img src="https://i.imgur.com/llF5iyg.png" alt="Загрузка...">
+</div>
+
 <h1>🔍 Поиск ГОСТов</h1>
-<form method='get'>
-<input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
-<button type='submit'>Искать</button>
+<form method='get' onsubmit="showLoading()">
+  <input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
+  <button type='submit'>Искать</button>
 </form>
-<p><a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> | <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a></p>
-{% if results %}<h2>Результаты:</h2>{% for gost, text in results.items() %}
-<div class="result"><b>{{ gost }}</b><br>{{ text }}</div>{% endfor %}{% elif query %}<p>Ничего не найдено.</p>{% endif %}
+
+<p>
+  <a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> |
+  <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a>
+</p>
+
+{% if results %}
+  <h2>Результаты:</h2>
+  {% for gost, text in results.items() %}
+    <div class="result"><b>{{ gost }}</b><br>{{ text }}</div>
+  {% endfor %}
+{% elif query %}
+  <p>Ничего не найдено.</p>
+{% endif %}
 </body>
 </html>"""
 
@@ -208,3 +255,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Flask запущен на 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)
+
