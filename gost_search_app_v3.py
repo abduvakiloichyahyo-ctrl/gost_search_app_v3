@@ -136,7 +136,11 @@ a:hover { text-decoration: underline; }
 <tr>
 <td>{{ gost }}</td>
 <td>{{ text }}</td>
-<td><a href='{{ url_for("edit_gost", gost=gost) }}'>✏️</a> <a href='{{ url_for("delete_gost", gost=gost) }}'>🗑</a></td>
+<td>
+    <a href='{{ url_for("edit_gost", gost=gost) }}'>✏️</a>
+    <a href='{{ url_for("delete_gost", gost=gost) }}'
+       onclick="return confirm('Вы действительно хотите удалить ГОСТ {{ gost }}?');">🗑</a>
+</td>
 </tr>
 {% endfor %}
 </table>
@@ -231,3 +235,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
