@@ -16,6 +16,10 @@
       "answer": "⚠ Ошибка OpenRouter API: {\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits\",\"code\":402}}"
     },
     {
+      "query": "shlang",
+      "answer": "⚠ Ошибка OpenRouter API: {\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits\",\"code\":402}}"
+    },
+    {
       "query": "8708309907",
       "answer": "⚠ Ошибка OpenRouter API: {\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits\",\"code\":402}}"
     },
