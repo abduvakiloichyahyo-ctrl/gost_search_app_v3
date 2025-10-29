@@ -12,6 +12,10 @@
   "ГОСТ 13996 – 2019": "п.6.1.3  Не менее 95 % керамические плитки без видимых дефектов, влияющих на внешний видлицевой поверхности, ГОСТ 13996 – 2019 п.6.1.4  На лицевой поверхности плиток не обнаружены трещины и цек",
   "ai_history": [
     {
+      "query": "shlang",
+      "answer": "⚠ Ошибка OpenRouter API: {\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits\",\"code\":402}}"
+    },
+    {
       "query": "8708309907",
       "answer": "⚠ Ошибка OpenRouter API: {\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits\",\"code\":402}}"
     },
