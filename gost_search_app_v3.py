@@ -400,7 +400,7 @@ def index():
 
         # Если обычный поиск ничего не дал — попытаемся использовать AI
         if not results:
-            ai_result = ai_search_gost(search_query)
+           ai_result = ask_openrouter(search_query)
 
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query, ai_result=ai_result)
 
@@ -411,7 +411,7 @@ def ai_search():
     if not query:
         return redirect(url_for("index"))
 
-    ai_text = ai_search_gost(query)
+    ai_text = ask_openrouter(query)
     # показываем AI-результат в том же шаблоне
     return render_template_string(TEMPLATE_INDEX, results=None, ai_result=ai_text, query=query)
 
@@ -453,3 +453,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
