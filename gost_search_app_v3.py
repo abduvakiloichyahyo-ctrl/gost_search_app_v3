@@ -1,42 +1,24 @@
 from flask import Flask, render_template_string, request, redirect, url_for
 import json, os, base64, requests
+import google.generativeai as genai
 
-# ✅ Функция для обращения к OpenRouter AI
-def ask_openrouter(query):
+# ✅ Функция для обращения к Google Gemini AI
+def ask_gemini(query):
     """
-    Отправляет запрос к OpenRouter AI и возвращает ответ в виде текста.
+    Отправляет запрос к Google Gemini и возвращает ответ в виде текста.
     """
     try:
-        api_key = os.environ.get("OPENROUTER_API_KEY")  # ключ из Render
+        api_key = os.environ.get("GEMINI_API_KEY")  # ключ из Render
         if not api_key:
-            return "⚠️ Ошибка: отсутствует OPENROUTER_API_KEY"
+            return "⚠️ Ошибка: отсутствует GEMINI_API_KEY"
 
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-
-        data = {
-            "model": "gpt-4o-mini",  # быстрая и недорогая AI-модель
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "Ты эксперт по ГОСТам и техническим стандартам. Отвечай кратко и по делу.",
-                },
-                {"role": "user", "content": query},
-            ],
-        }
-
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions",
-                                 headers=headers, json=data)
-        if response.status_code != 200:
-            return f"Ошибка API OpenRouter: {response.text}"
-
-        ai_text = response.json()["choices"][0]["message"]["content"]
-        return ai_text.strip()
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")  # быстрая бесплатная модель
+        response = model.generate_content(f"Ты эксперт по ГОСТам и техническим стандартам. Ответь кратко и по делу.\n\n{query}")
+        return response.text.strip() if response and response.text else "⚠️ Пустой ответ от Gemini"
 
     except Exception as e:
-        return f"⚠️ Ошибка запроса к OpenRouter: {e}"
+        return f"⚠️ Ошибка запроса к Google Gemini: {e}"
 
 
 app = Flask(__name__)
@@ -49,11 +31,6 @@ GITHUB_REPO = os.environ.get("GITHUB_REPO")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_FILE_PATH = "gost_data.json"
 
-# --- OpenRouter (бесплатный AI) ключ из окружения ---
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-# модель можно поменять на ту, которая доступна в твоём OpenRouter аккаунте
-AI_MODEL = "gpt-4-turbo"
 
 def github_api_request(method, endpoint, data=None):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/{endpoint}"
@@ -64,11 +41,11 @@ def github_api_request(method, endpoint, data=None):
     response = requests.request(method, url, headers=headers, json=data)
     if response.status_code >= 400:
         print("GitHub API error:", response.text)
-    # попытка вернуть json или пустой объект при ошибке парсинга
     try:
         return response.json()
     except Exception:
         return {}
+
 
 # --- Работа с локальными данными ---
 def load_data():
@@ -80,10 +57,12 @@ def load_data():
                 return {}
     return {}
 
+
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     push_to_github()
+
 
 # --- Отправляем файл в GitHub ---
 def push_to_github():
@@ -268,9 +247,9 @@ def index():
             if search_query in gost.lower() or search_query in text_combined.lower():
                 results[gost] = text_combined
 
-        # Если обычный поиск ничего не дал — попытаемся использовать AI
+        # Если обычный поиск ничего не дал — спросим AI (Gemini)
         if not results:
-           ai_result = ask_openrouter(search_query)
+            ai_result = ask_gemini(search_query)
 
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query, ai_result=ai_result)
 
@@ -281,9 +260,12 @@ def ai_search():
     if not query:
         return redirect(url_for("index"))
 
-    ai_text = ask_openrouter(query)
+    ai_text = ask_gemini(query)
     return render_template_string(TEMPLATE_INDEX, results=None, ai_result=ai_text, query=query)
 
+
+# Остальные маршруты add, list, edit, delete — без изменений 👇
+# ------------------------------------------------------------
 
 @app.route("/add", methods=["GET", "POST"])
 def add_gost():
@@ -327,5 +309,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
 
