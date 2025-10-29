@@ -11,6 +11,7 @@ GITHUB_REPO = os.environ.get("GITHUB_REPO")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_FILE_PATH = "gost_data.json"
 
+
 def github_api_request(method, endpoint, data=None):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/{endpoint}"
     headers = {
@@ -25,6 +26,7 @@ def github_api_request(method, endpoint, data=None):
     except Exception:
         return {}
 
+
 # --- Работа с локальными данными ---
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -35,10 +37,12 @@ def load_data():
                 return {}
     return {}
 
+
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     push_to_github()
+
 
 # --- Отправляем файл в GitHub ---
 def push_to_github():
@@ -57,6 +61,7 @@ def push_to_github():
     except Exception as e:
         print("⚠ Ошибка при отправке в GitHub:", e)
 
+
 # ---------- HTML шаблоны ----------
 TEMPLATE_INDEX = """<html>
 <head>
@@ -64,18 +69,47 @@ TEMPLATE_INDEX = """<html>
 <title>ГОСТ База — Поиск ГОСТов</title>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
-body { font-family: "Segoe UI", sans-serif; margin:0; height:100vh; overflow:hidden; color:#fff; }
-video#bgVideo { position:fixed; top:0; left:0; min-width:100%; min-height:100%; object-fit:cover; z-index:-2; }
-.overlay { position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.55); z-index:-1; }
-.container { position:relative; z-index:2; width:600px; margin:auto; text-align:center; top:50%; transform:translateY(-50%);
-background: rgba(255,255,255,0.08); padding:30px; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); }
-h1 { font-weight:300; margin-bottom:20px; }
-input[type=text] { padding:10px; width:65%; border:none; border-radius:4px; outline:none; font-size:16px; }
-button { padding:10px 18px; border:none; background:#007bff; color:#fff; border-radius:4px; cursor:pointer; font-size:16px; }
-button:hover { background:#0056b3; }
-a { text-decoration:none; color:#fff; margin:0 10px; }
-a:hover { text-decoration:underline; }
-div.result { background: rgba(255,255,255,0.1); padding:10px; margin-top:10px; border-radius:6px; }
+body { 
+  font-family: "Segoe UI", sans-serif; 
+  margin: 0; 
+  color: #fff; 
+  overflow-y: auto; /* ✅ Разрешаем вертикальный скролл */
+  background: #000; 
+}
+video#bgVideo { 
+  position: fixed; 
+  top: 0; left: 0; 
+  min-width: 100%; 
+  min-height: 100%; 
+  object-fit: cover; 
+  z-index: -2; 
+}
+.overlay { 
+  position: fixed; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%; 
+  background: rgba(0,0,0,0.55); 
+  z-index: -1; 
+}
+.container { 
+  position: relative; 
+  z-index: 2; 
+  width: 600px; 
+  margin: 50px auto; /* ✅ теперь страница двигается */
+  text-align: center; 
+  background: rgba(255,255,255,0.08); 
+  padding: 30px; 
+  border-radius: 12px; 
+  box-shadow: 0 0 20px rgba(0,0,0,0.4); 
+  backdrop-filter: blur(8px);
+}
+h1 { font-weight: 300; margin-bottom: 20px; }
+input[type=text] { padding: 10px; width: 65%; border: none; border-radius: 4px; outline: none; font-size: 16px; }
+button { padding: 10px 18px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+button:hover { background: #0056b3; }
+a { text-decoration: none; color: #fff; margin: 0 10px; }
+a:hover { text-decoration: underline; }
+div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; text-align: left; }
 </style>
 </head>
 <body>
@@ -114,17 +148,22 @@ TEMPLATE_ADD = """<html>
 <title>Добавить ГОСТ</title>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
-body { font-family: "Segoe UI", sans-serif; margin:0; height:100vh; overflow:hidden; color:#fff; }
-video#bgVideo { position:fixed; top:0; left:0; min-width:100%; min-height:100%; object-fit:cover; z-index:-2; }
-.overlay { position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.55); z-index:-1; }
-.container { position:relative; z-index:2; width:500px; margin:auto; top:50%; transform:translateY(-50%);
-background: rgba(255,255,255,0.08); padding:30px; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align:center; }
-h1 { font-weight:300; margin-bottom:20px; }
-input, textarea { width:100%; padding:10px; border:none; border-radius:4px; margin-bottom:12px; font-size:15px; }
-button { padding:10px 18px; border:none; background:#28a745; color:#fff; border-radius:4px; cursor:pointer; font-size:16px; }
-button:hover { background:#218838; }
-a { color:#fff; text-decoration:none; }
-a:hover { text-decoration:underline; }
+body { 
+  font-family: "Segoe UI", sans-serif; 
+  margin: 0; 
+  color: #fff; 
+  overflow-y: auto; /* ✅ разрешаем прокрутку */
+  background: #000; 
+}
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
+.container { position: relative; z-index: 2; width: 500px; margin: 50px auto; background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center; }
+h1 { font-weight: 300; margin-bottom: 20px; }
+input, textarea { width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px; }
+button { padding: 10px 18px; border: none; background: #28a745; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+button:hover { background: #218838; }
+a { color: #fff; text-decoration: none; }
+a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -160,6 +199,7 @@ def index():
 
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
 
+
 @app.route("/add", methods=["GET", "POST"])
 def add_gost():
     if request.method == "POST":
@@ -171,10 +211,12 @@ def add_gost():
         return redirect(url_for("add_gost"))
     return render_template_string(TEMPLATE_ADD)
 
+
 @app.route("/list", methods=["GET"])
 def list_gosts():
     data = load_data()
     return render_template_string(TEMPLATE_INDEX, results=data, query="")
+
 
 @app.route("/edit/<gost>", methods=["GET", "POST"])
 def edit_gost(gost):
@@ -186,6 +228,7 @@ def edit_gost(gost):
     text = data.get(gost, "")
     return render_template_string(TEMPLATE_ADD, gost=gost, text=text)
 
+
 @app.route("/delete/<gost>")
 def delete_gost(gost):
     data = load_data()
@@ -193,6 +236,7 @@ def delete_gost(gost):
         del data[gost]
         save_data(data)
     return redirect(url_for("list_gosts"))
+
 
 # ---------- Запуск ----------
 if __name__ == "__main__":
