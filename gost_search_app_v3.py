@@ -177,11 +177,20 @@ TEMPLATE_LIST = """<html>
 body {
   font-family: "Segoe UI", sans-serif;
   color: #fff;
-  height: 100vh;
   margin: 0;
-  overflow: hidden;
+  background: #000;
+  overflow-y: auto; /* ✅ Разрешаем прокрутку страницы */
 }
-video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -1; filter: brightness(0.4); }
+video#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(0.4);
+}
 .container {
   width: 800px;
   margin: 40px auto;
@@ -189,20 +198,64 @@ video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 1
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  margin-bottom: 80px; /* ✅ Отступ снизу для красивого конца страницы */
 }
-h1 { text-align: center; font-weight: 400; margin-bottom: 20px; }
-table { border-collapse: collapse; width: 100%; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff; }
-th { background: rgba(255,255,255,0.2); }
-a { text-decoration: none; color: #fff; margin-right: 10px; }
-a:hover { text-decoration: underline; }
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+h1 {
+  text-align: center;
+  font-weight: 400;
+  margin-bottom: 20px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  vertical-align: top;
+}
+th {
+  background: rgba(255,255,255,0.2);
+}
+a {
+  text-decoration: none;
+  color: #fff;
+  margin-right: 10px;
+}
+a:hover {
+  text-decoration: underline;
+}
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+}
 .modal-content {
-  background: #222; padding: 20px 30px; border-radius: 10px; text-align: center; color: #fff;
+  background: #222;
+  padding: 20px 30px;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff;
   box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 .modal-content button {
-  margin: 10px; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 15px;
+  margin: 10px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
 }
 .btn-confirm { background: #28a745; color: white; }
 .btn-cancel { background: #dc3545; color: white; }
@@ -218,21 +271,21 @@ p { text-align: center; margin-top: 20px; }
 </video>
 
 <div class="container">
-<h1>📋 Список ГОСТов</h1>
-<table>
-<tr><th>Номер</th><th>Текст</th><th>Действия</th></tr>
-{% for gost, text in gost_data.items() %}
-<tr>
-<td>{{ gost }}</td>
-<td>{{ text }}</td>
-<td>
-  <a href="{{ url_for('edit_gost', gost=gost) }}">✏️</a>
-  <a href="#" onclick="confirmDelete('{{ gost }}')">🗑</a>
-</td>
-</tr>
-{% endfor %}
-</table>
-<p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
+  <h1>📋 Список ГОСТов</h1>
+  <table>
+    <tr><th>Номер</th><th>Текст</th><th>Действия</th></tr>
+    {% for gost, text in gost_data.items() %}
+    <tr>
+      <td>{{ gost }}</td>
+      <td style="white-space: pre-wrap;">{{ text }}</td>
+      <td>
+        <a href="{{ url_for('edit_gost', gost=gost) }}">✏️</a>
+        <a href="#" onclick="confirmDelete('{{ gost }}')">🗑</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
 </div>
 
 <div id="deleteModal" class="modal">
@@ -260,6 +313,7 @@ document.getElementById('confirmDelete').onclick = function() {
   }
 };
 </script>
+
 </body>
 </html>"""
 
@@ -367,3 +421,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
