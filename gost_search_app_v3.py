@@ -9,6 +9,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 def ask_gemini(query):
     """
     Отправляет запрос к Google Gemini AI и возвращает ответ в виде текста.
+    Автоматически выбирает доступную модель.
     """
     try:
         api_key = os.environ.get("GOOGLE_API_KEY")
@@ -17,14 +18,27 @@ def ask_gemini(query):
 
         genai.configure(api_key=api_key)
 
-        # ✅ Проверенная модель, которая точно доступна
-        model = genai.GenerativeModel("gemini-1.5-flash-8b")
+        # Получаем список доступных моделей
+        models = list(genai.list_models())
+
+        available_models = [
+            m.name for m in models if "generateContent" in getattr(m, "supported_generation_methods", [])
+        ]
+
+        if not available_models:
+            model_names = [m.name for m in models]
+            return f"❌ Нет доступных моделей с generateContent. Найдены: {model_names}"
+
+        # ✅ Берем первую доступную модель (обычно gemini-1.5-pro-latest)
+        model_name = available_models[0]
+        print(f"✅ Используется модель: {model_name}")
+
+        model = genai.GenerativeModel(model_name)
 
         response = model.generate_content(
             f"Ты эксперт по ГОСТам и техническим стандартам. Отвечай кратко и по делу.\n\n{query}"
         )
 
-        # Проверяем корректность ответа
         if not hasattr(response, "text") or not response.text:
             return "⚠️ Ошибка: пустой ответ от Gemini API"
 
@@ -322,6 +336,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
