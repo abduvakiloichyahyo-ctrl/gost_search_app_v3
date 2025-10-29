@@ -11,6 +11,12 @@ GITHUB_REPO = os.environ.get("GITHUB_REPO")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_FILE_PATH = "gost_data.json"
 
+# --- OpenRouter (бесплатный AI) ключ из окружения ---
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+# модель можно поменять на ту, которая доступна в твоём OpenRouter аккаунте
+AI_MODEL = "gpt-4-turbo"
+
 def github_api_request(method, endpoint, data=None):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/{endpoint}"
     headers = {
@@ -20,13 +26,20 @@ def github_api_request(method, endpoint, data=None):
     response = requests.request(method, url, headers=headers, json=data)
     if response.status_code >= 400:
         print("GitHub API error:", response.text)
-    return response.json()
+    # попытка вернуть json или пустой объект при ошибке парсинга
+    try:
+        return response.json()
+    except Exception:
+        return {}
 
 # --- Работа с локальными данными ---
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            try:
+                return json.load(f)
+            except Exception:
+                return {}
     return {}
 
 def save_data(data):
@@ -96,6 +109,8 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
   <form method='get'>
     <input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
     <button type='submit'>Искать</button>
+    <!-- Кнопка AI: отправляет запрос на /ai_search методом POST -->
+    <button formaction="{{ url_for('ai_search') }}" formmethod="post">AI поиск 🤖</button>
   </form>
   <p>
     <a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> |
@@ -106,6 +121,9 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
   {% for gost, text in results.items() %}
     <div class="result"><b>{{ gost }}</b><br>{{ text }}</div>
   {% endfor %}
+  {% elif ai_result %}
+  <h2>Результат AI:</h2>
+  <div class="result">{{ ai_result }}</div>
   {% elif query %}
   <p>Ничего не найдено.</p>
   {% endif %}
@@ -166,7 +184,6 @@ function showSavedImage() {
 </div>
 </body>
 </html>"""
-
 
 TEMPLATE_LIST = """<html>
 <head>
@@ -328,8 +345,7 @@ video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 1
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
 .container {
   position: relative; z-index: 2; width: 500px; margin: auto; top: 50%; transform: translateY(-50%);
-  background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center;
+  background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center;
 }
 h1 { font-weight: 300; margin-bottom: 20px; }
 textarea { width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px; }
@@ -374,6 +390,7 @@ def index():
     data = load_data()
     search_query = request.args.get("q", "").lower().strip()
     results = {}
+    ai_result = None
 
     if search_query:
         for gost, text in data.items():
@@ -381,7 +398,22 @@ def index():
             if search_query in gost.lower() or search_query in text_combined.lower():
                 results[gost] = text_combined
 
-    return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
+        # Если обычный поиск ничего не дал — попытаемся использовать AI
+        if not results:
+            ai_result = ai_search_gost(search_query)
+
+    return render_template_string(TEMPLATE_INDEX, results=results, query=search_query, ai_result=ai_result)
+
+@app.route("/ai_search", methods=["POST"])
+def ai_search():
+    # кнопка AI в форме отправляет POST с полем 'q'
+    query = request.form.get("q", "").strip()
+    if not query:
+        return redirect(url_for("index"))
+
+    ai_text = ai_search_gost(query)
+    # показываем AI-результат в том же шаблоне
+    return render_template_string(TEMPLATE_INDEX, results=None, ai_result=ai_text, query=query)
 
 @app.route("/add", methods=["GET", "POST"])
 def add_gost():
@@ -421,4 +453,3 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
