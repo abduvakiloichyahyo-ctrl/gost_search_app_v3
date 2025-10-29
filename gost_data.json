@@ -12,11 +12,7 @@
   "ГОСТ 13996 – 2019": "п.6.1.3  Не менее 95 % керамические плитки без видимых дефектов, влияющих на внешний видлицевой поверхности, ГОСТ 13996 – 2019 п.6.1.4  На лицевой поверхности плиток не обнаружены трещины и цек",
   "ai_history": [
     {
-      "query": "колодки",
-      "answer": "⚠ Ошибка при запросе к OpenAI API: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}"
-    },
-    {
-      "query": "колодки",
+      "query": "фильтр",
       "answer": "⚠ Ошибка при запросе к OpenAI API: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}"
     },
     {
