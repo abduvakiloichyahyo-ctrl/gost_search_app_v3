@@ -7,26 +7,30 @@ import google.generativeai as genai
 
 def ask_gemini(query):
     """
-    Отправляет запрос к Google Gemini AI и возвращает ответ.
+    Отправляет запрос к Google Gemini AI и возвращает ответ в виде текста.
     """
     try:
-        api_key = os.environ.get("GOOGLE_API_KEY")  # ключ из Render
+        api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             return "⚠️ Ошибка: отсутствует GOOGLE_API_KEY"
 
-        # Настраиваем клиент
         genai.configure(api_key=api_key)
 
-        # Используем стабильную модель
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        # ✅ Исправленная модель — гарантированно существует
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
-        # Отправляем запрос
-        response = model.generate_content(query)
+        response = model.generate_content(
+            f"Ты эксперт по ГОСТам и техническим стандартам. Отвечай кратко и по делу.\n\n{query}"
+        )
+
+        # Проверяем корректность ответа
+        if not hasattr(response, "text") or not response.text:
+            return "⚠️ Ошибка: пустой ответ от Gemini API"
+
         return response.text.strip()
 
     except Exception as e:
         return f"⚠️ Ошибка запроса к Google Gemini: {e}"
-
 
 app = Flask(__name__)
 
@@ -316,5 +320,6 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
