@@ -1,42 +1,34 @@
 from flask import Flask, render_template_string, request, redirect, url_for
 import json, os, base64, requests
 
-app = Flask(__name__)
-
-DATA_FILE = "gost_data.json"
-
-# --- Настройки GitHub ---
-GITHUB_USER = os.environ.get("GITHUB_USER")
-GITHUB_REPO = os.environ.get("GITHUB_REPO")
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-GITHUB_FILE_PATH = "gost_data.json"
-
-# --- OpenRouter (бесплатный AI) ---
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-
-# ---------- AI функция ----------
+# ✅ Функция для обращения к OpenRouter AI
 def ask_openrouter(query):
-    """Запрос к OpenRouter AI"""
+    """
+    Отправляет запрос к OpenRouter AI и возвращает ответ в виде текста.
+    """
     try:
-        api_key = os.environ.get("OPENROUTER_API_KEY")
+        api_key = os.environ.get("OPENROUTER_API_KEY")  # ключ из Render
         if not api_key:
-            return "⚠️ Ошибка: не найден OPENROUTER_API_KEY"
+            return "⚠️ Ошибка: отсутствует OPENROUTER_API_KEY"
 
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
+
         data = {
-            "model": "gpt-4o-mini",
+            "model": "gpt-4o-mini",  # быстрая и недорогая AI-модель
             "messages": [
-                {"role": "system", "content": "Ты эксперт по ГОСТам. Отвечай кратко и по существу."},
+                {
+                    "role": "system",
+                    "content": "Ты эксперт по ГОСТам и техническим стандартам. Отвечай кратко и по делу.",
+                },
                 {"role": "user", "content": query},
             ],
         }
 
-        response = requests.post(OPENROUTER_URL, headers=headers, json=data)
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions",
+                                 headers=headers, json=data)
         if response.status_code != 200:
             return f"Ошибка API OpenRouter: {response.text}"
 
@@ -47,18 +39,38 @@ def ask_openrouter(query):
         return f"⚠️ Ошибка запроса к OpenRouter: {e}"
 
 
-# ---------- GitHub ----------
+app = Flask(__name__)
+
+DATA_FILE = "gost_data.json"
+
+# --- Настройки GitHub ---
+GITHUB_USER = os.environ.get("GITHUB_USER")
+GITHUB_REPO = os.environ.get("GITHUB_REPO")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_FILE_PATH = "gost_data.json"
+
+# --- OpenRouter (бесплатный AI) ключ из окружения ---
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+# модель можно поменять на ту, которая доступна в твоём OpenRouter аккаунте
+AI_MODEL = "gpt-4-turbo"
+
 def github_api_request(method, endpoint, data=None):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/{endpoint}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
     response = requests.request(method, url, headers=headers, json=data)
     if response.status_code >= 400:
         print("GitHub API error:", response.text)
+    # попытка вернуть json или пустой объект при ошибке парсинга
     try:
         return response.json()
     except Exception:
         return {}
 
+# --- Работа с локальными данными ---
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -73,6 +85,7 @@ def save_data(data):
         json.dump(data, f, ensure_ascii=False, indent=4)
     push_to_github()
 
+# --- Отправляем файл в GitHub ---
 def push_to_github():
     try:
         with open(DATA_FILE, "rb") as f:
@@ -85,82 +98,77 @@ def push_to_github():
             "content": encoded,
             "sha": sha
         })
-        print("✅ Файл gost_data.json успешно загружен на GitHub")
+        print("✅ Файл gost_data.json отправлен в GitHub")
     except Exception as e:
         print("⚠ Ошибка при отправке в GitHub:", e)
 
 
 # ---------- HTML шаблоны ----------
-TEMPLATE_INDEX = """
-<!DOCTYPE html>
-<html lang="ru">
+TEMPLATE_INDEX = """<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Поиск ГОСТ</title>
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 40px;
-        }
-        input {
-            padding: 10px;
-            width: 300px;
-            border: none;
-            border-radius: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            background: #00bcd4;
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-        button:hover { background: #0097a7; }
-        .result {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 10px;
-            text-align: left;
-            width: 60%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        a { color: #80deea; text-decoration: none; }
-    </style>
+<meta charset='utf-8'>
+<title>ГОСТ База — Поиск ГОСТов</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  color: #fff;
+}
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
+.container {
+  position: relative; z-index: 2; width: 600px; margin: auto; text-align: center; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+}
+h1 { font-weight: 300; margin-bottom: 20px; }
+input[type=text] { padding: 10px; width: 65%; border: none; border-radius: 4px; outline: none; font-size: 16px; }
+button {
+  padding: 10px 18px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px;
+}
+button:hover { background: #0056b3; }
+a { text-decoration: none; color: #fff; margin: 0 10px; }
+a:hover { text-decoration: underline; }
+div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; }
+</style>
 </head>
 <body>
-    <h1>🔍 Поиск по ГОСТам</h1>
-    <form method="GET">
-        <input type="text" name="q" placeholder="Введите номер или описание ГОСТ" value="{{ query or '' }}">
-        <button type="submit">Искать</button>
-    </form>
-    <br>
-    {% if results %}
-        <h3>Результаты поиска:</h3>
-        {% for gost, text in results.items() %}
-            <div class="result">
-                <b>{{ gost }}</b><br>{{ text }}
-            </div>
-        {% endfor %}
-    {% elif ai_result %}
-        <div class="result">
-            <b>🤖 Ответ AI:</b><br>{{ ai_result }}
-        </div>
-    {% elif query %}
-        <p>Ничего не найдено...</p>
-    {% endif %}
-    <br>
-    <a href="{{ url_for('add_gost') }}">➕ Добавить ГОСТ</a> |
-    <a href="{{ url_for('list_gosts') }}">📜 Список ГОСТов</a>
+
+<video autoplay muted loop id="bgVideo">
+  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div class="container">
+  <h1>🔍 Поиск ГОСТов</h1>
+  <form method='get'>
+    <input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
+    <button type='submit'>Искать</button>
+    <!-- Кнопка AI: отправляет запрос на /ai_search методом POST -->
+    <button formaction="{{ url_for('ai_search') }}" formmethod="post">AI поиск 🤖</button>
+  </form>
+  <p>
+    <a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> |
+    <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a>
+  </p>
+  {% if results %}
+  <h2>Результаты:</h2>
+  {% for gost, text in results.items() %}
+    <div class="result"><b>{{ gost }}</b><br>{{ text }}</div>
+  {% endfor %}
+  {% elif ai_result %}
+  <h2>Результат AI:</h2>
+  <div class="result">{{ ai_result }}</div>
+  {% elif query %}
+  <p>Ничего не найдено.</p>
+  {% endif %}
+</div>
+
 </body>
-</html>
-"""
+</html>"""
 
 TEMPLATE_ADD = """
 <!DOCTYPE html>
@@ -251,7 +259,8 @@ TEMPLATE_EDIT = """
 def index():
     data = load_data()
     search_query = request.args.get("q", "").lower().strip()
-    results, ai_result = {}, None
+    results = {}
+    ai_result = None
 
     if search_query:
         for gost, text in data.items():
@@ -259,10 +268,21 @@ def index():
             if search_query in gost.lower() or search_query in text_combined.lower():
                 results[gost] = text_combined
 
+        # Если обычный поиск ничего не дал — попытаемся использовать AI
         if not results:
-            ai_result = ask_openrouter(search_query)
+           ai_result = ask_openrouter(search_query)
 
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query, ai_result=ai_result)
+
+
+@app.route("/ai_search", methods=["POST"])
+def ai_search():
+    query = request.form.get("q", "").strip()
+    if not query:
+        return redirect(url_for("index"))
+
+    ai_text = ask_openrouter(query)
+    return render_template_string(TEMPLATE_INDEX, results=None, ai_result=ai_text, query=query)
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -277,7 +297,7 @@ def add_gost():
     return render_template_string(TEMPLATE_ADD)
 
 
-@app.route("/list")
+@app.route("/list", methods=["GET"])
 def list_gosts():
     data = load_data()
     return render_template_string(TEMPLATE_LIST, gost_data=data)
@@ -307,3 +327,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
