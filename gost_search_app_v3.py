@@ -275,7 +275,7 @@ def index():
     return render_template_string(TEMPLATE_INDEX, results=results, query=search_query, ai_result=ai_result)
 
 
-@app.route("/ai_search", methods=["POST"])
+@app.route("/ai_search", methods=["GET", "POST"])
 def ai_search():
     query = request.form.get("q", "").strip()
     if not query:
@@ -327,4 +327,5 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
