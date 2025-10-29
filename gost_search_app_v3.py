@@ -73,7 +73,7 @@ body {
   font-family: "Segoe UI", sans-serif; 
   margin: 0; 
   color: #fff; 
-  overflow-y: auto; /* ✅ Разрешаем вертикальный скролл */
+  overflow-y: auto; 
   background: #000; 
 }
 video#bgVideo { 
@@ -95,7 +95,7 @@ video#bgVideo {
   position: relative; 
   z-index: 2; 
   width: 600px; 
-  margin: 50px auto; /* ✅ теперь страница двигается */
+  margin: 50px auto; 
   text-align: center; 
   background: rgba(255,255,255,0.08); 
   padding: 30px; 
@@ -110,6 +110,9 @@ button:hover { background: #0056b3; }
 a { text-decoration: none; color: #fff; margin: 0 10px; }
 a:hover { text-decoration: underline; }
 div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; text-align: left; }
+.controls { text-align: right; margin-top: 5px; }
+.controls a { color: #ffdf00; font-size: 14px; margin-left: 10px; }
+.controls a.delete { color: #ff4b4b; }
 </style>
 </head>
 <body>
@@ -132,7 +135,13 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
   {% if results %}
   <h2>Результаты:</h2>
   {% for gost, text in results.items() %}
-    <div class="result"><b>{{ gost }}</b><br>{{ text }}</div>
+    <div class="result">
+      <b>{{ gost }}</b><br>{{ text }}
+      <div class="controls">
+        <a href="{{ url_for('edit_gost', gost=gost) }}">✏ Редактировать</a>
+        <a href="{{ url_for('delete_gost', gost=gost) }}" class="delete" onclick="return confirm('Удалить {{ gost }}?')">🗑 Удалить</a>
+      </div>
+    </div>
   {% endfor %}
   {% elif query %}
   <p>Ничего не найдено.</p>
@@ -152,7 +161,7 @@ body {
   font-family: "Segoe UI", sans-serif; 
   margin: 0; 
   color: #fff; 
-  overflow-y: auto; /* ✅ разрешаем прокрутку */
+  overflow-y: auto; 
   background: #000; 
 }
 video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
@@ -173,16 +182,17 @@ a:hover { text-decoration: underline; }
 <div class="overlay"></div>
 
 <div class="container">
-<h1>➕ Добавить ГОСТ</h1>
+<h1>➕ {% if gost %}Редактировать ГОСТ{% else %}Добавить ГОСТ{% endif %}</h1>
 <form method='post'>
-<input type='text' name='gost_number' placeholder='Номер ГОСТа' required><br>
-<textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6" required></textarea><br>
+<input type='text' name='gost_number' placeholder='Номер ГОСТа' value='{{ gost or "" }}' {% if gost %}readonly{% endif %} required><br>
+<textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6" required>{{ text or "" }}</textarea><br>
 <button type='submit'>💾 Сохранить</button>
 </form>
 <p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
 </div>
 </body>
 </html>"""
+
 
 # ---------- Flask маршруты ----------
 @app.route("/", methods=["GET"])
@@ -208,8 +218,8 @@ def add_gost():
         gost_text = request.form["gost_text"].strip()
         data[gost_number] = gost_text
         save_data(data)
-        return redirect(url_for("add_gost"))
-    return render_template_string(TEMPLATE_ADD)
+        return redirect(url_for("list_gosts"))
+    return render_template_string(TEMPLATE_ADD, gost=None, text=None)
 
 
 @app.route("/list", methods=["GET"])
@@ -224,7 +234,7 @@ def edit_gost(gost):
     if request.method == "POST":
         data[gost] = request.form["gost_text"].strip()
         save_data(data)
-        return redirect(url_for("edit_gost", gost=gost))
+        return redirect(url_for("list_gosts"))
     text = data.get(gost, "")
     return render_template_string(TEMPLATE_ADD, gost=gost, text=text)
 
