@@ -112,6 +112,45 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 </body>
 </html>"""
 
+TEMPLATE_ADD = """<html>
+<head>
+<meta charset='utf-8'>
+<title>Добавить ГОСТ</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<style>
+body { 
+  font-family: "Segoe UI", sans-serif; 
+  margin: 0; color: #fff; overflow-y: auto; background: #000; 
+}
+video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
+.container { position: relative; z-index: 2; width: 500px; margin: 50px auto; background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center; }
+h1 { font-weight: 300; margin-bottom: 20px; }
+input, textarea { width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px; }
+button { padding: 10px 18px; border: none; background: #28a745; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+button:hover { background: #218838; }
+a { color: #fff; text-decoration: none; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<video autoplay muted loop id="bgVideo">
+  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div class="container">
+<h1>➕ Добавить ГОСТ</h1>
+<form method='post'>
+<input type='text' name='gost_number' placeholder='Номер ГОСТа' required><br>
+<textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6" required></textarea><br>
+<button type='submit'>💾 Сохранить</button>
+</form>
+<p><a href='{{ url_for("index") }}'>⬅ Назад</a></p>
+</div>
+</body>
+</html>"""
+
 TEMPLATE_LIST = """<html>
 <head>
 <meta charset='utf-8'>
@@ -224,4 +263,5 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
