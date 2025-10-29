@@ -185,10 +185,13 @@ button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
   <h1>📋 Все ГОСТы</h1>
   {% for gost, text in data.items() %}
     <div class="result">
-      <b>{{ gost }}</b><br>{{ text }}<br>
-      <a class="btn-edit" href="{{ url_for('edit_gost', gost=gost) }}">✏ Редактировать</a>
-      <a class="btn-delete" href="{{ url_for('delete_gost', gost=gost) }}">🗑 Удалить</a>
-    </div>
+  <b>{{ gost }}</b><br>{{ text }}<br>
+  <a class="btn-edit" href="{{ url_for('edit_gost', gost=gost) }}">✏ Редактировать</a>
+  <a class="btn-delete" href="{{ url_for('delete_gost', gost=gost) }}"
+     onclick="return confirm('Вы точно хотите удалить {{ gost }}?');">
+     🗑 Удалить
+  </a>
+</div>
   {% endfor %}
   <a class="back" href="{{ url_for('index') }}">⬅ Назад</a>
 </div>
@@ -263,5 +266,6 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
