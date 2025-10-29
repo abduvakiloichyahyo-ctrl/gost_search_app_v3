@@ -181,8 +181,8 @@ def add_gost():
         gost_text = request.form["gost_text"].strip()
         data[gost_number] = gost_text
         save_data(data)
-        return redirect(url_for("add_gost"))
-    return render_template_string(TEMPLATE_INDEX)
+        return redirect(url_for("list_gosts"))
+    return render_template_string(TEMPLATE_ADD)
 
 
 @app.route("/list", methods=["GET"])
@@ -224,3 +224,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
