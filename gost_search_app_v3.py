@@ -2,6 +2,38 @@ from flask import Flask, render_template_string, request, redirect, url_for
 import json, os, base64, requests
 import google.generativeai as genai
 
+# Настройка ключа Gemini
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+def ask_gemini(prompt):
+    try:
+        # Получаем список моделей
+        models = genai.list_models()
+        available_models = []
+
+        print("📋 Доступные модели Gemini:")
+        for m in models:
+            print(f"- {m.name} (поддерживает generateContent: {'generateContent' in m.supported_generation_methods})")
+            if "generateContent" in m.supported_generation_methods:
+                available_models.append(m.name)
+
+        if not available_models:
+            return "❌ Нет моделей, поддерживающих generateContent. Проверь свой аккаунт Google AI Studio."
+
+        # Берем первую подходящую модель
+        model_name = available_models[0]
+        print(f"✅ Используется модель: {model_name}")
+
+        # Инициализируем модель
+        model = genai.GenerativeModel(model_name)
+        response = model.generate_content(prompt)
+
+        return response.text if response else "⚠️ Пустой ответ от Gemini."
+
+    except Exception as e:
+        return f"⚠️ Ошибка запроса к Google Gemini: {e}"
+
+
 # ✅ Функция для обращения к Google Gemini AI
 import google.generativeai as genai
 
@@ -320,6 +352,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
