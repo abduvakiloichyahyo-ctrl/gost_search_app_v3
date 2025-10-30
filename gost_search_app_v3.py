@@ -228,23 +228,41 @@ def add_gost():
 @app.route("/edit/<gost>", methods=["GET", "POST"])
 def edit_gost(gost):
     data = load_data()
-    info = data.get(gost, {"text": "", "mark": ""})
+    raw = data.get(gost, "")
+
+    # Приводим старые записи (строки) к новому виду
+    if isinstance(raw, str):
+        info = {"text": raw, "mark": ""}
+    else:
+        info = {"text": raw.get("text", ""), "mark": raw.get("mark", "")}
+
     if request.method == "POST":
-        info["text"] = request.form["gost_text"].strip()
-        info["mark"] = request.form["gost_mark"].strip()
-        data[gost] = info
+        # Собираем обновленные данные
+        new_text = request.form.get("gost_text", "").strip()
+        new_mark = request.form.get("gost_mark", "").strip()
+
+        # Сохраняем в едином формате
+        data[gost] = {"text": new_text, "mark": new_mark}
         save_data(data)
+
         return redirect(url_for("list_gosts"))
+
+    # Форма редактирования
     return render_template_string("""
-    <html><body>
-    <h1>Редактировать {{ gost }}</h1>
-    <form method="post">
-        Маркировка: <input type="text" name="gost_mark" value="{{ info.mark }}"><br><br>
-        <textarea name="gost_text" rows="10" cols="60">{{ info.text }}</textarea><br>
-        <button type="submit">💾 Сохранить</button>
-    </form>
-    <a href="{{ url_for('list_gosts') }}">⬅ Назад</a>
-    </body></html>
+    <html>
+    <head><meta charset='utf-8'><title>Редактировать {{ gost }}</title></head>
+    <body style="background:#000;color:#fff;font-family:Segoe UI,sans-serif;padding:20px;">
+      <h1>Редактировать {{ gost }}</h1>
+      <form method="post">
+          <label>Маркировка:</label><br>
+          <input type="text" name="gost_mark" value="{{ info.mark }}" style="width:500px;padding:8px;"><br><br>
+          <label>Пункты ГОСТа:</label><br>
+          <textarea name="gost_text" rows="10" cols="70" style="padding:8px">{{ info.text }}</textarea><br><br>
+          <button type="submit">💾 Сохранить</button>
+      </form>
+      <p><a href="{{ url_for('list_gosts') }}" style="color:#fff">⬅ Назад</a></p>
+    </body>
+    </html>
     """, gost=gost, info=info)
 
 
@@ -261,3 +279,4 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
