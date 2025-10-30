@@ -192,18 +192,25 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 @app.route("/", methods=["GET"])
 def index():
     data = load_data()
-    query = request.args.get("q", "").lower().strip()
+    search_query = request.args.get("q", "").lower().strip()
     results = {}
 
-    if query:
+    if search_query:
         for gost, info in data.items():
-            text = info.get("text", "")
-            mark = info.get("mark", "")
-            if query in gost.lower() or query in text.lower() or query in mark.lower():
-                results[gost] = info
+            # Поддержка старого формата (строка) и нового (словарь)
+            if isinstance(info, str):
+                text = info
+                mark = ""
+            else:
+                text = info.get("text", "")
+                mark = info.get("mark", "")
 
-    return render_template_string(TEMPLATE_INDEX, results=results, query=query)
+            # Ищем совпадения по номеру, маркировке или тексту
+            combined = f"{gost} {mark} {text}".lower()
+            if search_query in combined:
+                results[gost] = f"{mark}<br>{text}"
 
+    return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
 
 @app.route("/list")
 def list_gosts():
@@ -279,4 +286,5 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
