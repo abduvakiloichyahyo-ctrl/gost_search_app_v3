@@ -27,32 +27,20 @@ def github_api_request(method, endpoint, data=None):
         return {}
 
 
-# --- Работа с локальными данными (ленивая загрузка) ---
-_cached_data = None  # хранит ГОСТы в памяти после первой загрузки
-
-
+# --- Работа с локальными данными ---
 def load_data():
-    """Ленивая загрузка JSON — только при первом вызове, чтобы не было 502."""
-    global _cached_data
-    if _cached_data is None:
-        print("📦 Загрузка gost_data.json...")
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                try:
-                    _cached_data = json.load(f)
-                except Exception:
-                    _cached_data = {}
-        else:
-            _cached_data = {}
-    return _cached_data
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return {}
+    return {}
 
 
 def save_data(data):
-    """Сохраняет данные и синхронизирует с GitHub."""
-    global _cached_data
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    _cached_data = data  # обновляем кэш
     push_to_github()
 
 
@@ -72,67 +60,6 @@ def push_to_github():
         print("✅ Файл gost_data.json отправлен в GitHub")
     except Exception as e:
         print("⚠ Ошибка при отправке в GitHub:", e)
-
-
-# --- Интерфейс ---
-@app.route("/", methods=["GET", "POST"])
-def index():
-    data = load_data()
-    query = request.form.get("query", "").strip()
-    results = []
-
-    if query:
-        for gost_number, gost_info in data.items():
-            text = json.dumps(gost_info, ensure_ascii=False)
-            if query.lower() in text.lower() or query.lower() in gost_number.lower():
-                results.append({
-                    "number": gost_number,
-                    "marking": gost_info.get("marking", ""),
-                    "points": ", ".join(gost_info.get("points", []))
-                })
-
-    html = """
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Поиск ГОСТов</title>
-        <style>
-            body { font-family: sans-serif; background: #111; color: #eee; text-align: center; }
-            input { padding: 10px; border-radius: 8px; width: 50%; font-size: 16px; border: none; margin-top: 30px; }
-            button { padding: 10px 20px; border: none; background: #4CAF50; color: white; border-radius: 8px; cursor: pointer; margin-left: 10px; }
-            button:hover { background: #45a049; }
-            .gost-card { background: #222; margin: 10px auto; padding: 15px; width: 60%; border-radius: 10px; text-align: left; box-shadow: 0 0 10px #333; }
-            .marking { color: #FFD700; font-weight: bold; }
-            .points { color: #9CDCFE; font-size: 14px; }
-        </style>
-    </head>
-    <body>
-        <h2>🔍 Поиск по ГОСТ</h2>
-        <form method="POST">
-            <input name="query" placeholder="Введите номер, маркировку или пункт ГОСТ..." value="{{query}}">
-            <button type="submit">Поиск</button>
-        </form>
-
-        {% if results %}
-            <h3>Результаты поиска:</h3>
-            {% for r in results %}
-                <div class="gost-card">
-                    <div><b>ГОСТ:</b> {{ r.number }}</div>
-                    <div class="marking">Маркировка: {{ r.marking }}</div>
-                    <div class="points">Пункты: {{ r.points }}</div>
-                </div>
-            {% endfor %}
-        {% elif query %}
-            <p>Ничего не найдено 😕</p>
-        {% endif %}
-    </body>
-    </html>
-    """
-    return render_template_string(html, query=query, results=results)
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
 
 # ---------- HTML шаблоны ----------
@@ -385,10 +312,6 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
 
 
 
