@@ -143,6 +143,7 @@ a:hover { text-decoration: underline; }
 <h1>➕ Добавить ГОСТ</h1>
 <form method='post'>
 <input type='text' name='gost_number' placeholder='Номер ГОСТа' required><br>
+<input type='text' name='gost_mark' placeholder='Маркировка ГОСТа' required><br>
 <textarea name='gost_text' placeholder='Пункты ГОСТа' rows="6" required></textarea><br>
 <button type='submit'>💾 Сохранить</button>
 </form>
@@ -216,15 +217,17 @@ def index():
 
 
 @app.route("/add", methods=["GET", "POST"])
-def add_gost():
-    if request.method == "POST":
-        data = load_data()
-        gost_number = request.form["gost_number"].strip()
-        gost_text = request.form["gost_text"].strip()
-        data[gost_number] = gost_text
-        save_data(data)
-        return redirect(url_for("list_gosts"))
-    return render_template_string(TEMPLATE_ADD)
+if request.method == "POST":
+    data = load_data()
+    gost_number = request.form["gost_number"].strip()
+    gost_mark = request.form["gost_mark"].strip()
+    gost_text = request.form["gost_text"].strip()
+    data[gost_number] = {
+        "text": gost_text,
+        "mark": gost_mark
+    }
+    save_data(data)
+    return redirect(url_for("list_gosts"))
 
 
 @app.route("/list", methods=["GET"])
@@ -266,6 +269,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
