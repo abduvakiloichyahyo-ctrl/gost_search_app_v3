@@ -217,23 +217,30 @@ def index():
 
 
 @app.route("/add", methods=["GET", "POST"])
-if request.method == "POST":
-    data = load_data()
-    gost_number = request.form["gost_number"].strip()
-    gost_mark = request.form["gost_mark"].strip()
-    gost_text = request.form["gost_text"].strip()
-    data[gost_number] = {
-        "text": gost_text,
-        "mark": gost_mark
-    }
-    save_data(data)
-    return redirect(url_for("list_gosts"))
+def add_gost():
+    if request.method == "POST":
+        # Загружаем текущие данные
+        data = load_data()
 
+        # Получаем значения из формы
+        gost_number = request.form["gost_number"].strip()
+        gost_mark = request.form["gost_mark"].strip()
+        gost_text = request.form["gost_text"].strip()
 
-@app.route("/list", methods=["GET"])
-def list_gosts():
-    data = load_data()
-    return render_template_string(TEMPLATE_LIST, data=data)
+        # Сохраняем новый ГОСТ с маркировкой
+        data[gost_number] = {
+            "text": gost_text,
+            "mark": gost_mark
+        }
+
+        # Сохраняем локально и пушим в GitHub
+        save_data(data)
+
+        # Перенаправляем на список ГОСТов
+        return redirect(url_for("list_gosts"))
+
+    # Если GET-запрос — просто показываем форму
+    return render_template_string(TEMPLATE_ADD)
 
 
 @app.route("/edit/<gost>", methods=["GET", "POST"])
@@ -269,6 +276,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
