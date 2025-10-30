@@ -80,6 +80,7 @@ button:hover { background: #0056b3; }
 a { text-decoration: none; color: #fff; margin: 0 10px; }
 a:hover { text-decoration: underline; }
 div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; text-align: left; }
+.mark { color: #00ffcc; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -92,7 +93,7 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 <div class="container">
   <h1>🔍 Поиск ГОСТов</h1>
   <form method='get'>
-    <input type='text' name='q' value='{{ query }}' placeholder='Введите номер ГОСТа...'>
+    <input type='text' name='q' value='{{ query }}' placeholder='Введите номер или маркировку ГОСТа...'>
     <button type='submit'>Искать</button>
   </form>
   <p>
@@ -101,8 +102,10 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
   </p>
   {% if results %}
   <h2>Результаты:</h2>
-  {% for gost, text in results.items() %}
-    <div class="result"><b>{{ gost }}</b><br>{{ text }}</div>
+  {% for gost, info in results.items() %}
+    <div class="result">
+      <b>{{ gost }}</b> <span class="mark">({{ info.mark }})</span><br>{{ info.text }}
+    </div>
   {% endfor %}
   {% elif query %}
   <p>Ничего не найдено.</p>
@@ -118,19 +121,13 @@ TEMPLATE_ADD = """<html>
 <title>Добавить ГОСТ</title>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
-body { 
-  font-family: "Segoe UI", sans-serif; 
-  margin: 0; color: #fff; overflow-y: auto; background: #000; 
-}
+body { font-family: "Segoe UI", sans-serif; margin: 0; color: #fff; overflow-y: auto; background: #000; }
 video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
 .container { position: relative; z-index: 2; width: 500px; margin: 50px auto; background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); text-align: center; }
-h1 { font-weight: 300; margin-bottom: 20px; }
 input, textarea { width: 100%; padding: 10px; border: none; border-radius: 4px; margin-bottom: 12px; font-size: 15px; }
 button { padding: 10px 18px; border: none; background: #28a745; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
 button:hover { background: #218838; }
-a { color: #fff; text-decoration: none; }
-a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -163,104 +160,92 @@ video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 1
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
 .container { position: relative; z-index: 2; width: 700px; margin: 50px auto; background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); }
 h1 { text-align: center; font-weight: 300; }
-a { color: #fff; text-decoration: none; }
-a:hover { text-decoration: underline; }
+.mark { color: #00ffcc; }
 div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; }
-button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
-.btn-delete { background: #dc3545; color: #fff; }
-.btn-edit { background: #ffc107; color: #000; }
+.btn-delete { background: #dc3545; color: #fff; padding: 6px 10px; border-radius: 4px; text-decoration: none; }
+.btn-edit { background: #ffc107; color: #000; padding: 6px 10px; border-radius: 4px; text-decoration: none; }
 .btn-delete:hover { background: #c82333; }
 .btn-edit:hover { background: #e0a800; }
-.back { display: inline-block; margin-top: 20px; background: #007bff; color: #fff; padding: 10px 15px; border-radius: 6px; text-decoration: none; }
-.back:hover { background: #0056b3; }
 </style>
 </head>
 <body>
-
 <video autoplay muted loop id="bgVideo">
   <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
 </video>
 <div class="overlay"></div>
-
 <div class="container">
   <h1>📋 Все ГОСТы</h1>
-  {% for gost, text in data.items() %}
+  {% for gost, info in data.items() %}
     <div class="result">
-  <b>{{ gost }}</b><br>{{ text }}<br>
-  <a class="btn-edit" href="{{ url_for('edit_gost', gost=gost) }}">✏ Редактировать</a>
-  <a class="btn-delete" href="{{ url_for('delete_gost', gost=gost) }}"
-     onclick="return confirm('Вы точно хотите удалить {{ gost }}?');">
-     🗑 Удалить
-  </a>
-</div>
+      <b>{{ gost }}</b> <span class="mark">({{ info.mark }})</span><br>{{ info.text }}<br>
+      <a class="btn-edit" href="{{ url_for('edit_gost', gost=gost) }}">✏ Редактировать</a>
+      <a class="btn-delete" href="{{ url_for('delete_gost', gost=gost) }}" onclick="return confirm('Удалить {{ gost }}?');">🗑 Удалить</a>
+    </div>
   {% endfor %}
-  <a class="back" href="{{ url_for('index') }}">⬅ Назад</a>
+  <a class="btn-edit" href="{{ url_for('index') }}">⬅ Назад</a>
 </div>
-
 </body>
 </html>"""
+
 
 # ---------- Flask маршруты ----------
 @app.route("/", methods=["GET"])
 def index():
     data = load_data()
-    search_query = request.args.get("q", "").lower().strip()
+    query = request.args.get("q", "").lower().strip()
     results = {}
 
-    if search_query:
-        for gost, text in data.items():
-            text_combined = " ".join(text) if isinstance(text, list) else str(text)
-            if search_query in gost.lower() or search_query in text_combined.lower():
-                results[gost] = text_combined
+    if query:
+        for gost, info in data.items():
+            text = info.get("text", "")
+            mark = info.get("mark", "")
+            if query in gost.lower() or query in text.lower() or query in mark.lower():
+                results[gost] = info
 
-    return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
+    return render_template_string(TEMPLATE_INDEX, results=results, query=query)
+
+
+@app.route("/list")
+def list_gosts():
+    data = load_data()
+    return render_template_string(TEMPLATE_LIST, data=data)
 
 
 @app.route("/add", methods=["GET", "POST"])
 def add_gost():
     if request.method == "POST":
-        # Загружаем текущие данные
         data = load_data()
-
-        # Получаем значения из формы
         gost_number = request.form["gost_number"].strip()
         gost_mark = request.form["gost_mark"].strip()
         gost_text = request.form["gost_text"].strip()
 
-        # Сохраняем новый ГОСТ с маркировкой
-        data[gost_number] = {
-            "text": gost_text,
-            "mark": gost_mark
-        }
-
-        # Сохраняем локально и пушим в GitHub
+        data[gost_number] = {"text": gost_text, "mark": gost_mark}
         save_data(data)
-
-        # Перенаправляем на список ГОСТов
         return redirect(url_for("list_gosts"))
-
-    # Если GET-запрос — просто показываем форму
     return render_template_string(TEMPLATE_ADD)
 
 
 @app.route("/edit/<gost>", methods=["GET", "POST"])
 def edit_gost(gost):
     data = load_data()
+    info = data.get(gost, {"text": "", "mark": ""})
     if request.method == "POST":
-        data[gost] = request.form["gost_text"].strip()
+        info["text"] = request.form["gost_text"].strip()
+        info["mark"] = request.form["gost_mark"].strip()
+        data[gost] = info
         save_data(data)
         return redirect(url_for("list_gosts"))
-    text = data.get(gost, "")
     return render_template_string("""
     <html><body>
     <h1>Редактировать {{ gost }}</h1>
     <form method="post">
-        <textarea name="gost_text" rows="10" cols="50">{{ text }}</textarea><br>
+        Маркировка: <input type="text" name="gost_mark" value="{{ info.mark }}"><br><br>
+        <textarea name="gost_text" rows="10" cols="60">{{ info.text }}</textarea><br>
         <button type="submit">💾 Сохранить</button>
     </form>
     <a href="{{ url_for('list_gosts') }}">⬅ Назад</a>
     </body></html>
-    """, gost=gost, text=text)
+    """, gost=gost, info=info)
 
 
 @app.route("/delete/<gost>")
@@ -276,8 +261,3 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
