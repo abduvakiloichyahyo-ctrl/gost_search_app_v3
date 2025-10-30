@@ -197,7 +197,7 @@ def index():
 
     if search_query:
         for gost, info in data.items():
-            # Поддержка старого формата (строка) и нового (словарь)
+            # Поддержка старого и нового формата
             if isinstance(info, str):
                 text = info
                 mark = ""
@@ -205,12 +205,26 @@ def index():
                 text = info.get("text", "")
                 mark = info.get("mark", "")
 
-            # Ищем совпадения по номеру, маркировке или тексту
+            # Формируем строку для поиска
             combined = f"{gost} {mark} {text}".lower()
             if search_query in combined:
-                results[gost] = f"{mark}<br>{text}"
+                results[gost] = {"mark": mark, "text": text}
 
-    return render_template_string(TEMPLATE_INDEX, results=results, query=search_query)
+    # Изменили отображение, чтобы всё было видно
+    html_results = ""
+    for gost, info in results.items():
+        html_results += f"""
+        <div class='result'>
+            <b>ГОСТ:</b> {gost}<br>
+            <b>Маркировка:</b> {info.get("mark", "")}<br>
+            <b>Пункты:</b><br>{info.get("text", "").replace('\n', '<br>')}
+        </div>
+        """
+
+    return render_template_string(TEMPLATE_INDEX.replace(
+        "{% for gost, text in results.items() %}",
+        "{{ html_results|safe }}"
+    ), results=results, html_results=html_results, query=search_query)
 
 @app.route("/list")
 def list_gosts():
@@ -286,5 +300,6 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
