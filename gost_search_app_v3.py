@@ -27,20 +27,32 @@ def github_api_request(method, endpoint, data=None):
         return {}
 
 
-# --- Работа с локальными данными ---
+# --- Работа с локальными данными (ленивая загрузка) ---
+_cached_data = None  # хранит ГОСТы в памяти после первой загрузки
+
+
 def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except Exception:
-                return {}
-    return {}
+    """Ленивая загрузка JSON — только при первом вызове, чтобы не было 502."""
+    global _cached_data
+    if _cached_data is None:
+        print("📦 Загрузка gost_data.json...")
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                try:
+                    _cached_data = json.load(f)
+                except Exception:
+                    _cached_data = {}
+        else:
+            _cached_data = {}
+    return _cached_data
 
 
 def save_data(data):
+    """Сохраняет данные и синхронизирует с GitHub."""
+    global _cached_data
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+    _cached_data = data  # обновляем кэш
     push_to_github()
 
 
@@ -312,6 +324,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
