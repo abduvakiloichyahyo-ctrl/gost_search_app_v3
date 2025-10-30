@@ -205,26 +205,38 @@ def index():
                 text = info.get("text", "")
                 mark = info.get("mark", "")
 
-            # Формируем строку для поиска
+            # Объединяем поля для поиска
             combined = f"{gost} {mark} {text}".lower()
             if search_query in combined:
                 results[gost] = {"mark": mark, "text": text}
 
-    # Изменили отображение, чтобы всё было видно
+    # --- Генерация HTML для результатов ---
     html_results = ""
     for gost, info in results.items():
         html_results += f"""
         <div class='result'>
-            <b>ГОСТ:</b> {gost}<br>
-            <b>Маркировка:</b> {info.get("mark", "")}<br>
-            <b>Пункты:</b><br>{info.get("text", "").replace('\n', '<br>')}
+            <div style="font-size:18px; font-weight:600; color:#00bfff;">ГОСТ: {gost}</div>
+            <div style="margin-top:6px;">
+                <span style="color:#ffcc00; font-weight:500;">Маркировка:</span> {info.get('mark', '')}
+            </div>
+            <div style="margin-top:8px; background:rgba(255,255,255,0.08); padding:10px; border-radius:6px;">
+                <span style="color:#90ee90; font-weight:500;">Пункты:</span><br>
+                <div style="margin-top:5px; color:#e0e0e0; line-height:1.5;">
+                    {info.get('text', '').replace('\n', '<br>')}
+                </div>
+            </div>
         </div>
         """
 
-    return render_template_string(TEMPLATE_INDEX.replace(
-        "{% for gost, text in results.items() %}",
-        "{{ html_results|safe }}"
-    ), results=results, html_results=html_results, query=search_query)
+    return render_template_string(
+        TEMPLATE_INDEX.replace(
+            "{% for gost, text in results.items() %}",
+            "{{ html_results|safe }}"
+        ),
+        results=results,
+        html_results=html_results,
+        query=search_query
+    )
 
 @app.route("/list")
 def list_gosts():
@@ -300,6 +312,7 @@ def delete_gost(gost):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
