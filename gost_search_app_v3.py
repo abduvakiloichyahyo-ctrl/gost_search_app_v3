@@ -374,13 +374,6 @@ def delete_gost(gost):
         del data[gost]
         save_data(data)
     return redirect(url_for("list_gosts"))
-@app.route("/tnved", methods=["GET"])
-def search_tnved():
-    @app.route("/api/tnved")
-def api_tnved():
-    query = request.args.get("q", "").strip().lower()
-    data = load_tnved()
-    results = {}
 
     if query:
         for code, info in data.items():
@@ -438,9 +431,25 @@ def api_tnved():
     """, results=results)
 
 # ---------- Запуск ----------
+@app.route("/api/tnved")
+def api_tnved():
+    query = request.args.get("q", "").strip().lower()
+    data = load_tnved()
+    results = {}
+
+    if query:
+        for code, info in data.items():
+            name = info.get("name", "")
+            combined = f"{code} {name}".lower()
+            if query in combined:
+                results[code] = info
+
+    return results
+    
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
