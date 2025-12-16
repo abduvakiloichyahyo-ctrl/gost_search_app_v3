@@ -110,10 +110,7 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 </div>
 
 <div id="tnved-results"></div>
-  <form method="get" action="/tnved" style="margin-bottom:15px;">
-  <input type="text" name="q" placeholder="Поиск КОД ТН ВЭД или продукции...">
-  <button type="submit" style="background:#17a2b8;">ТН ВЭД</button>
-</form>
+  
 
 <!-- 🔍 Поиск ГОСТ -->
 <form method="get">
@@ -449,6 +446,7 @@ def api_tnved():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
