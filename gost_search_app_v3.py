@@ -10,7 +10,17 @@ GITHUB_USER = os.environ.get("GITHUB_USER")
 GITHUB_REPO = os.environ.get("GITHUB_REPO")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_FILE_PATH = "gost_data.json"
+# ---------- ТН ВЭД ----------
+TNVED_FILE = "tnved_data.json"
 
+def load_tnved():
+    if os.path.exists(TNVED_FILE):
+        with open(TNVED_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return {}
+    return {}
 
 def github_api_request(method, endpoint, data=None):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/{endpoint}"
@@ -93,6 +103,10 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 <div class="container">
   <h1>🔍 Поиск ГОСТов</h1>
   <form method='get'>
+    <form method="get" action="/tnved" style="margin-top:15px;">
+  <input type="text" name="q" placeholder="Поиск КОД ТН ВЭД или продукции...">
+  <button type="submit" style="background:#17a2b8;">ТН ВЭД</button>
+</form>
     <input type='text' name='q' value='{{ query }}' placeholder='Введите номер или маркировку ГОСТа...'>
     <button type='submit'>Искать</button>
   </form>
@@ -306,12 +320,60 @@ def delete_gost(gost):
         del data[gost]
         save_data(data)
     return redirect(url_for("list_gosts"))
+@app.route("/tnved", methods=["GET"])
+def search_tnved():
+    query = request.args.get("q", "").strip().lower()
+    data = load_tnved()
+    results = {}
 
+    if query:
+        for code, info in data.items():
+            name = info.get("name", "")
+            combined = f"{code} {name}".lower()
+            if query in combined:
+                results[code] = info
+
+    return render_template_string("""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>🔎 Поиск ТН ВЭД</title>
+    </head>
+    <body style="background:#000;color:#fff;font-family:Segoe UI,sans-serif;padding:20px;">
+        <h1>🔎 Результаты поиска ТН ВЭД</h1>
+
+        {% if results %}
+            {% for code, info in results.items() %}
+                <div style="margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.08);border-radius:8px;">
+                    <div style="font-size:18px;color:#00bfff;"><b>КОД ТН ВЭД:</b> {{ code }}</div>
+                    <div style="margin-top:6px;"><b>Наименование:</b> {{ info.name }}</div>
+
+                    {% if info.gost %}
+                        <div style="margin-top:6px;">
+                            <b>ГОСТ:</b>
+                            <ul>
+                                {% for g in info.gost %}
+                                    <li>{{ g }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>❌ Ничего не найдено</p>
+        {% endif %}
+
+        <a href="/" style="color:#fff">⬅ Назад</a>
+    </body>
+    </html>
+    """, results=results)
 
 # ---------- Запуск ----------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
