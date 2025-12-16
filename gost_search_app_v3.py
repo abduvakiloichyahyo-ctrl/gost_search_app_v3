@@ -102,6 +102,14 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 
 <div class="container">
   <h1>🔍 Поиск ГОСТов</h1>
+  <div style="margin-bottom:15px;">
+  <input type="text" id="tnved-input" placeholder="Поиск КОД ТН ВЭД или продукции...">
+  <button type="button" onclick="searchTNVED()" style="background:#17a2b8;">
+    ТН ВЭД
+  </button>
+</div>
+
+<div id="tnved-results"></div>
   <form method="get" action="/tnved" style="margin-bottom:15px;">
   <input type="text" name="q" placeholder="Поиск КОД ТН ВЭД или продукции...">
   <button type="submit" style="background:#17a2b8;">ТН ВЭД</button>
@@ -127,7 +135,51 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
   <p>Ничего не найдено.</p>
   {% endif %}
 </div>
+<script>
+function searchTNVED() {
+    const input = document.getElementById("tnved-input");
+    const box = document.getElementById("tnved-results");
+    const q = input.value.trim();
 
+    box.innerHTML = "";
+    if (!q) return;
+
+    fetch("/api/tnved?q=" + encodeURIComponent(q))
+        .then(response => response.json())
+        .then(data => {
+            if (!data || Object.keys(data).length === 0) {
+                box.innerHTML = "<p>❌ Ничего не найдено</p>";
+                return;
+            }
+
+            for (const code in data) {
+                const item = data[code];
+                let html = `
+                  <div class="result">
+                    <div style="font-size:17px;color:#00bfff;">
+                      <b>КОД ТН ВЭД:</b> ${code}
+                    </div>
+                    <div><b>Наименование:</b> ${item.name || ""}</div>
+                `;
+
+                if (item.standards && item.standards.length) {
+                    html += "<div><b>Стандарты:</b><ul>";
+                    item.standards.forEach(s => {
+                        html += `<li>${s}</li>`;
+                    });
+                    html += "</ul></div>";
+                }
+
+                html += "</div>";
+                box.innerHTML += html;
+            }
+        })
+        .catch(err => {
+            box.innerHTML = "<p>⚠ Ошибка запроса</p>";
+            console.error(err);
+        });
+}
+</script>
 </body>
 </html>"""
 
@@ -324,6 +376,20 @@ def delete_gost(gost):
     return redirect(url_for("list_gosts"))
 @app.route("/tnved", methods=["GET"])
 def search_tnved():
+    @app.route("/api/tnved")
+def api_tnved():
+    query = request.args.get("q", "").strip().lower()
+    data = load_tnved()
+    results = {}
+
+    if query:
+        for code, info in data.items():
+            name = info.get("name", "")
+            combined = f"{code} {name}".lower()
+            if query in combined:
+                results[code] = info
+
+    return results
     query = request.args.get("q", "").strip().lower()
     data = load_tnved()
     results = {}
@@ -375,6 +441,7 @@ def search_tnved():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
