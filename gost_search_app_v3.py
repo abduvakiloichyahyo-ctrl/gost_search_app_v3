@@ -13,6 +13,17 @@ GITHUB_FILE_PATH = "gost_data.json"
 # ---------- ТН ВЭД ----------
 TNVED_FILE = "tnved_data.json"
 
+REGULATION_FILE = "regulation.json"
+
+def load_regulation():
+    if os.path.exists(REGULATION_FILE):
+        with open(REGULATION_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return {}
+    return {}
+    
 def load_tnved():
     if os.path.exists(TNVED_FILE):
         with open(TNVED_FILE, "r", encoding="utf-8") as f:
@@ -110,6 +121,20 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 </div>
 
 <div id="tnved-results"></div>
+
+<hr style="margin:25px 0;opacity:0.3;">
+
+<h2>⚖ Проверка по техрегламенту</h2>
+
+<input type="text" id="reg-product" placeholder="Наименование товара">
+<br><br>
+<input type="number" id="reg-voltage" placeholder="Напряжение (В)">
+<br><br>
+<button onclick="checkRegulation()" style="background:#6f42c1;">
+  Проверить
+</button>
+
+<div id="reg-result" style="margin-top:15px;"></div>
   
 
 <!-- 🔍 Поиск ГОСТ -->
@@ -134,6 +159,50 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 </div>
 <script>
 function searchTNVED() {
+<script>
+function searchREG() {
+    const q = document.getElementById("reg-input").value.trim();
+    const box = document.getElementById("reg-results");
+    box.innerHTML = "";
+
+    if (!q) return;
+
+    fetch("/api/regulation?q=" + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => {
+        if (!data || data.applies === undefined) {
+            box.innerHTML = "<p>❌ Нет данных</p>";
+            return;
+        }
+
+        if (!data.applies) {
+            box.innerHTML = `<p style="color:#ff6b6b;">
+              ❌ Не подпадает: ${data.reason}
+            </p>`;
+            return;
+        }
+
+        let html = `<div class="result">
+          <b>✅ Подпадает под регламент:</b><br>
+          ${data.regulation}<br><br>
+
+          <b>Форма оценки:</b>
+          <ul>${data.forms.map(f => `<li>${f}</li>`).join("")}</ul>
+
+          <b>Требования:</b>
+          <ul>${data.requirements.map(r => `<li>${r}</li>`).join("")}</ul>
+
+          <b>Документы:</b>
+          <ul>${data.documents.map(d => `<li>${d}</li>`).join("")}</ul>
+        </div>`;
+
+        box.innerHTML = html;
+      })
+      .catch(() => {
+        box.innerHTML = "<p>⚠ Ошибка проверки</p>";
+      });
+}
+</script>
     const input = document.getElementById("tnved-input");
     const box = document.getElementById("tnved-results");
     const q = input.value.trim();
@@ -442,10 +511,55 @@ def api_tnved():
                 results[code] = info
 
     return results
-    
+REGULATION_FILE = "regulation.json"
+
+def load_regulation():
+    if os.path.exists(REGULATION_FILE):
+        with open(REGULATION_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+@app.route("/api/regulation-check")
+def regulation_check():
+    query = request.args.get("q", "").lower().strip()
+    voltage = request.args.get("v", "").strip()
+
+    reg = load_regulation()
+
+    result = {
+        "applies": False,
+        "reason": ""
+    }
+
+    if not query:
+        result["reason"] = "Не указан товар"
+        return result
+
+    # Проверка по исключениям
+    for excl in reg.get("excluded_categories", []):
+        if excl.lower() in query:
+            result["reason"] = f"Исключено: {excl}"
+            return result
+
+    # Проверка по напряжению (если ввели)
+    if voltage.isdigit():
+        v = int(voltage)
+        ac_min = reg["voltage_limits"]["ac_min_v"]
+        ac_max = reg["voltage_limits"]["ac_max_v"]
+
+        if v < ac_min or v > ac_max:
+            result["reason"] = "Напряжение вне диапазона регламента"
+            return result
+
+    result["applies"] = True
+    result["reason"] = "Подпадает под технический регламент"
+
+    return result
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
