@@ -504,7 +504,7 @@ def load_regulation():
 
 @app.route("/api/regulation-check")
 def regulation_check():
-    query = request.args.get("q", "").lower().strip()
+    query = request.args.get("q", "").strip()
     voltage = request.args.get("v", "").strip()
 
     reg = load_regulation()
@@ -514,17 +514,17 @@ def regulation_check():
         "reason": ""
     }
 
-    if not query:
-        result["reason"] = "Не указан товар"
+    # 1. Проверка: введён ли код
+    if not query.isdigit() or len(query) < 6:
+        result["reason"] = "Введите корректный код ТН ВЭД"
         return result
 
-    # Проверка по исключениям
-    for excl in reg.get("excluded_categories", []):
-        if excl.lower() in query:
-            result["reason"] = f"Исключено: {excl}"
-            return result
+    # 2. Проверка: есть ли код в регламенте
+    if query not in reg.get("tnved_codes", []):
+        result["reason"] = "Код ТН ВЭД не входит в область действия регламента"
+        return result
 
-    # Проверка по напряжению (если ввели)
+    # 3. Проверка по напряжению (если ввели)
     if voltage.isdigit():
         v = int(voltage)
         ac_min = reg["voltage_limits"]["ac_min_v"]
@@ -534,14 +534,18 @@ def regulation_check():
             result["reason"] = "Напряжение вне диапазона регламента"
             return result
 
+    # ✅ Если ВСЕ проверки прошли
     result["applies"] = True
     result["reason"] = "Подпадает под технический регламент"
+    result["regulation"] = reg["name"]
+    result["forms"] = reg["conformity_forms"]
 
     return result
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
