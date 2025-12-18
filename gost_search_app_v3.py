@@ -87,7 +87,7 @@ def push_to_github():
 TEMPLATE_INDEX = """<html>
 <head>
 <meta charset='utf-8'>
-<title>ГОСТ База — Поиск ГОСТов</title>
+<title>ГОСТ База — Поиск по области ОС</title>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
 body { font-family: "Segoe UI", sans-serif; margin: 0; color: #fff; overflow-y: auto; background: #000; }
@@ -112,7 +112,7 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 <div class="overlay"></div>
 
 <div class="container">
-  <h1>🔍 Поиск ГОСТов</h1>
+  <h1>🔍 Поиск по области ОС</h1>
   <div style="margin-bottom:15px;">
   <input type="text" id="tnved-input" placeholder="Поиск КОД ТН ВЭД или продукции...">
   <button type="button" onclick="searchTNVED()" style="background:#17a2b8;">
@@ -545,6 +545,7 @@ def regulation_check():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
