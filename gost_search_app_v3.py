@@ -158,51 +158,8 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
   {% endif %}
 </div>
 <script>
+/* ---------- ТН ВЭД ---------- */
 function searchTNVED() {
-<script>
-function searchREG() {
-    const q = document.getElementById("reg-input").value.trim();
-    const box = document.getElementById("reg-results");
-    box.innerHTML = "";
-
-    if (!q) return;
-
-    fetch("/api/regulation?q=" + encodeURIComponent(q))
-      .then(r => r.json())
-      .then(data => {
-        if (!data || data.applies === undefined) {
-            box.innerHTML = "<p>❌ Нет данных</p>";
-            return;
-        }
-
-        if (!data.applies) {
-            box.innerHTML = `<p style="color:#ff6b6b;">
-              ❌ Не подпадает: ${data.reason}
-            </p>`;
-            return;
-        }
-
-        let html = `<div class="result">
-          <b>✅ Подпадает под регламент:</b><br>
-          ${data.regulation}<br><br>
-
-          <b>Форма оценки:</b>
-          <ul>${data.forms.map(f => `<li>${f}</li>`).join("")}</ul>
-
-          <b>Требования:</b>
-          <ul>${data.requirements.map(r => `<li>${r}</li>`).join("")}</ul>
-
-          <b>Документы:</b>
-          <ul>${data.documents.map(d => `<li>${d}</li>`).join("")}</ul>
-        </div>`;
-
-        box.innerHTML = html;
-      })
-      .catch(() => {
-        box.innerHTML = "<p>⚠ Ошибка проверки</p>";
-      });
-}
-</script>
     const input = document.getElementById("tnved-input");
     const box = document.getElementById("tnved-results");
     const q = input.value.trim();
@@ -211,7 +168,7 @@ function searchREG() {
     if (!q) return;
 
     fetch("/api/tnved?q=" + encodeURIComponent(q))
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             if (!data || Object.keys(data).length === 0) {
                 box.innerHTML = "<p>❌ Ничего не найдено</p>";
@@ -222,27 +179,53 @@ function searchREG() {
                 const item = data[code];
                 let html = `
                   <div class="result">
-                    <div style="font-size:17px;color:#00bfff;">
-                      <b>КОД ТН ВЭД:</b> ${code}
-                    </div>
-                    <div><b>Наименование:</b> ${item.name || ""}</div>
+                    <b>КОД ТН ВЭД:</b> ${code}<br>
+                    <b>Наименование:</b> ${item.name || ""}
                 `;
 
                 if (item.standards && item.standards.length) {
-                    html += "<div><b>Стандарты:</b><ul>";
-                    item.standards.forEach(s => {
-                        html += `<li>${s}</li>`;
-                    });
-                    html += "</ul></div>";
+                    html += "<br><b>Стандарты:</b><ul>";
+                    item.standards.forEach(s => html += `<li>${s}</li>`);
+                    html += "</ul>";
                 }
 
                 html += "</div>";
                 box.innerHTML += html;
             }
         })
-        .catch(err => {
+        .catch(() => {
             box.innerHTML = "<p>⚠ Ошибка запроса</p>";
-            console.error(err);
+        });
+}
+
+/* ---------- ТЕХРЕГЛАМЕНТ ---------- */
+function checkRegulation() {
+    const product = document.getElementById("reg-product").value.trim();
+    const voltage = document.getElementById("reg-voltage").value.trim();
+    const box = document.getElementById("reg-result");
+
+    box.innerHTML = "";
+    if (!product) {
+        box.innerHTML = "<p>❌ Введите наименование товара</p>";
+        return;
+    }
+
+    fetch(`/api/regulation-check?q=${encodeURIComponent(product)}&v=${encodeURIComponent(voltage)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.applies) {
+                box.innerHTML = `<p style="color:#ff6b6b;">❌ ${data.reason}</p>`;
+                return;
+            }
+
+            box.innerHTML = `
+              <div class="result">
+                <b style="color:#90ee90;">✅ Подпадает под техрегламент</b>
+              </div>
+            `;
+        })
+        .catch(() => {
+            box.innerHTML = "<p>⚠ Ошибка проверки</p>";
         });
 }
 </script>
@@ -559,6 +542,7 @@ def regulation_check():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
