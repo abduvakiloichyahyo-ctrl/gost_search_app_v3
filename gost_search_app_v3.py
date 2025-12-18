@@ -124,7 +124,7 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 
 <hr style="margin:25px 0;opacity:0.3;">
 
-<h2>⚖ Проверка по техрегламенту</h2>
+<h2>⚖ Проверка КОД ТНВЭД по техрегламенту UzTR 216-042:2025</h2>
 
 <input type="text" id="reg-product" placeholder="Наименование товара">
 <br><br>
@@ -545,6 +545,7 @@ def regulation_check():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
