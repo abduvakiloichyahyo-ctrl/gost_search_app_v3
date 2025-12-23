@@ -66,21 +66,30 @@ def save_data(data):
 
 
 # --- Отправляем файл в GitHub ---
+import threading
+
+github_lock = threading.Lock()
+
 def push_to_github():
-    try:
-        with open(DATA_FILE, "rb") as f:
-            content = f.read()
-        encoded = base64.b64encode(content).decode()
-        file_info = github_api_request("GET", f"contents/{GITHUB_FILE_PATH}")
-        sha = file_info.get("sha")
-        github_api_request("PUT", f"contents/{GITHUB_FILE_PATH}", {
-            "message": "Автообновление gost_data.json через сайт",
-            "content": encoded,
-            "sha": sha
-        })
-        print("✅ Файл gost_data.json отправлен в GitHub")
-    except Exception as e:
-        print("⚠ Ошибка при отправке в GitHub:", e)
+    with github_lock:
+        try:
+            with open(DATA_FILE, "rb") as f:
+                content = f.read()
+
+            encoded = base64.b64encode(content).decode()
+
+            file_info = github_api_request("GET", f"contents/{GITHUB_FILE_PATH}")
+            sha = file_info.get("sha")
+
+            github_api_request("PUT", f"contents/{GITHUB_FILE_PATH}", {
+                "message": "Автообновление gost_data.json",
+                "content": encoded,
+                "sha": sha
+            })
+
+            print("✅ GitHub update OK")
+        except Exception as e:
+            print("⚠️ GitHub error:", e)
 
 
 # ---------- HTML шаблоны ----------
@@ -545,6 +554,7 @@ def regulation_check():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
