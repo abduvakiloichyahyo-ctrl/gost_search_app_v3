@@ -140,19 +140,7 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 <script>
 /* ---------- SPA CACHE ---------- */
 const spaCache = {};
-
-/* 3️⃣ SPA router */
-function loadRoute() { ... }
-window.addEventListener("popstate", loadRoute);
-
-/* 4️⃣ АВТОЗАПУСК ПОСЛЕ ЗАГРУЗКИ СТРАНИЦЫ */
-document.addEventListener("DOMContentLoaded", () => {
-    const saved = localStorage.getItem("site-bg");
-    if (saved) {
-        setBackground(saved);
-    }
-
-    loadRoute();   // если у тебя есть SPA-router
+    
 });
 /* ---------- GLITCH CONTENT ---------- */
 function setAppContent(html) {
@@ -235,7 +223,7 @@ function editGost(gost) {
           <textarea id="edit-text" rows="5" style="width:100%;">${data.text || ""}</textarea><br><br>
           <button onclick="saveGostEdit('${gost}')">💾 Сохранить</button>
           <button onclick="loadList()">⬅ Назад</button>
-        `;
+        `);
       });
 }
 
@@ -579,6 +567,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
