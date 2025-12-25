@@ -59,6 +59,20 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 .mark { color: #00ffcc; font-size: 14px; }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
+/* ---------- SPA АНИМАЦИИ ---------- */
+#app {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#app.fade-out {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+#app.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
 </style>
 </head>
 <body>
@@ -83,20 +97,36 @@ const spaCache = {};
 function loadPageCached(url, cacheKey) {
     const app = document.getElementById("app");
 
-    if (spaCache[cacheKey]) {
-        app.innerHTML = spaCache[cacheKey];
-        return;
-    }
+    // 1️⃣ плавно скрываем текущий контент
+    app.classList.remove("fade-in");
+    app.classList.add("fade-out");
 
-    fetch(url)
-      .then(r => r.text())
-      .then(html => {
-          spaCache[cacheKey] = html;
-          app.innerHTML = html;
-      })
-      .catch(() => {
-          app.innerHTML = "<p>⚠ Ошибка загрузки</p>";
-      });
+    setTimeout(() => {
+
+        // 2️⃣ если есть в кеше — берём оттуда
+        if (spaCache[cacheKey]) {
+            app.innerHTML = spaCache[cacheKey];
+            app.classList.remove("fade-out");
+            app.classList.add("fade-in");
+            return;
+        }
+
+        // 3️⃣ иначе — грузим с сервера
+        fetch(url)
+          .then(r => r.text())
+          .then(html => {
+              spaCache[cacheKey] = html;
+              app.innerHTML = html;
+              app.classList.remove("fade-out");
+              app.classList.add("fade-in");
+          })
+          .catch(() => {
+              app.innerHTML = "<p>⚠ Ошибка загрузки</p>";
+              app.classList.remove("fade-out");
+              app.classList.add("fade-in");
+          });
+
+    }, 200); // ⏱ время совпадает с CSS transition
 }
 
 /* ---------- SPA: РЕДАКТИРОВАНИЕ ---------- */
@@ -452,6 +482,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
