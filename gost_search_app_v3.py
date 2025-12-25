@@ -146,21 +146,12 @@ function loadHome() {
 // Функция загрузки списка ГОСТов
 function loadList() {
     const app = document.getElementById("app");
+    function loadList() {
+    const app = document.getElementById("app");
     fetch("/api/list-gosts")
-      .then(r => r.json())
-      .then(data => {
-          let html = "<h1>📋 Список ГОСТов</h1>";
-          if (Object.keys(data).length === 0) {
-              html += "<p>Список пуст.</p>";
-          } else {
-              for (const gost in data) {
-                  const info = data[gost];
-                  const text = info.text || "";
-                  const mark = info.mark || "";
-                  html += `<div class="result"><b>${gost}</b> <span class="mark">(${mark})</span><br>${text}</div>`;
-              }
-          }
-          app.innerHTML = html;
+      .then(r => r.text())          // ✅ ТЕКСТ
+      .then(html => {
+          app.innerHTML = html;     // ✅ ВСТАВЛЯЕМ КАК HTML
       });
 }
 
@@ -456,6 +447,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
