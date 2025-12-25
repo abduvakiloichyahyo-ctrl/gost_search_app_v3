@@ -277,7 +277,7 @@ setTimeout(() => {
     document.getElementById("reg-search-btn")
       ?.addEventListener("click", checkRegulation);
 }, 170);
-
+}
 // Функция загрузки списка ГОСТов
 function loadList() {
     loadPageCached("/api/list-gosts", "list");
@@ -576,6 +576,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
