@@ -146,12 +146,13 @@ function loadHome() {
 // Функция загрузки списка ГОСТов
 function loadList() {
     const app = document.getElementById("app");
-    function loadList() {
-    const app = document.getElementById("app");
     fetch("/api/list-gosts")
-      .then(r => r.text())          // ✅ ТЕКСТ
+      .then(r => r.text())          // HTML
       .then(html => {
-          app.innerHTML = html;     // ✅ ВСТАВЛЯЕМ КАК HTML
+          app.innerHTML = html;
+      })
+      .catch(() => {
+          app.innerHTML = "<p>⚠ Ошибка загрузки списка</p>";
       });
 }
 
@@ -447,6 +448,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
