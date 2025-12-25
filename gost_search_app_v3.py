@@ -77,32 +77,41 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 </div>
 
 <script>
+const spaCache = {};
+
+/* ---------- SPA: КЕШ СТРАНИЦ ---------- */
+function loadPageCached(url, cacheKey) {
+    const app = document.getElementById("app");
+
+    if (spaCache[cacheKey]) {
+        app.innerHTML = spaCache[cacheKey];
+        return;
+    }
+
+    fetch(url)
+      .then(r => r.text())
+      .then(html => {
+          spaCache[cacheKey] = html;
+          app.innerHTML = html;
+      })
+      .catch(() => {
+          app.innerHTML = "<p>⚠ Ошибка загрузки</p>";
+      });
+}
 
 /* ---------- SPA: РЕДАКТИРОВАНИЕ ---------- */
 function editGost(gost) {
-  fetch("/api/get-gost/" + encodeURIComponent(gost))
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById("app").innerHTML = `
-        <h2>✏️ Редактировать ${gost}</h2>
-        <input id="edit-mark" value="${data.mark || ""}" placeholder="Маркировка"><br><br>
-        <textarea id="edit-text" rows="5" style="width:100%;">${data.text || ""}</textarea><br><br>
-        <button onclick="saveGostEdit('${gost}')">💾 Сохранить</button>
-        <button onclick="loadList()">⬅ Назад</button>
-      `;
-    });
-}
-
-function saveGostEdit(gost) {
-  fetch("/api/update-gost", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      number: gost,
-      mark: document.getElementById("edit-mark").value,
-      text: document.getElementById("edit-text").value
-    })
-  }).then(() => loadList());
+    fetch("/api/get-gost/" + encodeURIComponent(gost))
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("app").innerHTML = `
+          <h2>✏️ Редактировать ${gost}</h2>
+          <input id="edit-mark" value="${data.mark || ""}" placeholder="Маркировка"><br><br>
+          <textarea id="edit-text" rows="5" style="width:100%;">${data.text || ""}</textarea><br><br>
+          <button onclick="saveGostEdit('${gost}')">💾 Сохранить</button>
+          <button onclick="loadList()">⬅ Назад</button>
+        `;
+      });
 }
 
 /* ---------- SPA: УДАЛЕНИЕ ---------- */
@@ -110,7 +119,10 @@ function deleteGost(gost) {
   if (!confirm("Удалить ГОСТ " + gost + "?")) return;
 
   fetch("/api/delete-gost/" + encodeURIComponent(gost))
-    .then(() => loadList());
+    .then(() => {
+    delete spaCache["list"]; // 🔥 сброс кеша
+    loadList();
+});
 }
 
 // Функция загрузки главной страницы (Поиск ГОСТ)
@@ -145,15 +157,8 @@ function loadHome() {
 
 // Функция загрузки списка ГОСТов
 function loadList() {
-    const app = document.getElementById("app");
-    fetch("/api/list-gosts")
-      .then(r => r.text())          // HTML
-      .then(html => {
-          app.innerHTML = html;
-      })
-      .catch(() => {
-          app.innerHTML = "<p>⚠ Ошибка загрузки списка</p>";
-      });
+    loadPageCached("/api/list-gosts", "list");
+}
 }
 
 // Функция загрузки формы добавления ГОСТа
@@ -448,6 +453,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
