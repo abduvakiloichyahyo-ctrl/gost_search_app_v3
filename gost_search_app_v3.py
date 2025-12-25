@@ -77,6 +77,42 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 </div>
 
 <script>
+
+/* ---------- SPA: РЕДАКТИРОВАНИЕ ---------- */
+function editGost(gost) {
+  fetch("/api/get-gost/" + encodeURIComponent(gost))
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("app").innerHTML = `
+        <h2>✏️ Редактировать ${gost}</h2>
+        <input id="edit-mark" value="${data.mark || ""}" placeholder="Маркировка"><br><br>
+        <textarea id="edit-text" rows="5" style="width:100%;">${data.text || ""}</textarea><br><br>
+        <button onclick="saveGostEdit('${gost}')">💾 Сохранить</button>
+        <button onclick="loadList()">⬅ Назад</button>
+      `;
+    });
+}
+
+function saveGostEdit(gost) {
+  fetch("/api/update-gost", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      number: gost,
+      mark: document.getElementById("edit-mark").value,
+      text: document.getElementById("edit-text").value
+    })
+  }).then(() => loadList());
+}
+
+/* ---------- SPA: УДАЛЕНИЕ ---------- */
+function deleteGost(gost) {
+  if (!confirm("Удалить ГОСТ " + gost + "?")) return;
+
+  fetch("/api/delete-gost/" + encodeURIComponent(gost))
+    .then(() => loadList());
+}
+
 // Функция загрузки главной страницы (Поиск ГОСТ)
 function loadHome() {
     const app = document.getElementById("app");
@@ -293,7 +329,51 @@ def index():
 @app.route("/api/list-gosts")
 def api_list_gosts():
     data = load_data()
-    return jsonify(data)
+    html = "<h2>📋 Список ГОСТов</h2>"
+
+    for gost, info in data.items():
+        text = info.get("text", "")
+        mark = info.get("mark", "")
+        html += f"""
+        <div class="result">
+          <b>{gost}</b> <span class="mark">({mark})</span><br>
+          {text}<br><br>
+          <button onclick="editGost('{gost}')">✏️ Редактировать</button>
+          <button onclick="deleteGost('{gost}')" style="background:#dc3545;">🗑 Удалить</button>
+        </div>
+        """
+
+    return html
+
+@app.route("/api/get-gost/<gost>")
+def api_get_gost(gost):
+    data = load_data()
+    return data.get(gost, {})
+
+@app.route("/api/update-gost", methods=["POST"])
+def api_update_gost():
+    data = load_data()
+    j = request.json
+    gost = j.get("number")
+
+    if gost not in data:
+        return {"ok": False}
+
+    data[gost] = {
+        "mark": j.get("mark", ""),
+        "text": j.get("text", "")
+    }
+
+    save_data(data)
+    return {"ok": True}
+
+@app.route("/api/delete-gost/<gost>")
+def api_delete_gost(gost):
+    data = load_data()
+    if gost in data:
+        del data[gost]
+        save_data(data)
+    return {"ok": True}
 
 @app.route("/api/search")
 def api_search():
@@ -376,5 +456,6 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
