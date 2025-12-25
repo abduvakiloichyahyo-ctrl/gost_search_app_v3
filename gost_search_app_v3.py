@@ -140,14 +140,6 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 <script>
 /* ---------- SPA CACHE ---------- */
 const spaCache = {};
-/* 2️⃣ функции */
-function setAppContent(html) { ... }
-function setBackground(type) { ... }
-function loadPageCached(...) { ... }
-function loadList() { ... }
-function loadSearch() { ... }
-function editGost(...) { ... }
-function deleteGost(...) { ... }
 
 /* 3️⃣ SPA router */
 function loadRoute() { ... }
@@ -237,7 +229,7 @@ function editGost(gost) {
     fetch("/api/get-gost/" + encodeURIComponent(gost))
       .then(r => r.json())
       .then(data => {
-        document.getElementById("app").innerHTML = `
+        setAppContent(`
           <h2>✏️ Редактировать ${gost}</h2>
           <input id="edit-mark" value="${data.mark || ""}" placeholder="Маркировка"><br><br>
           <textarea id="edit-text" rows="5" style="width:100%;">${data.text || ""}</textarea><br><br>
@@ -587,6 +579,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
