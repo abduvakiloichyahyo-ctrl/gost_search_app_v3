@@ -138,8 +138,8 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 </div>
 
 <script>
-    
-});
+const spaCache = {};
+   
 /* ---------- GLITCH CONTENT ---------- */
 function setAppContent(html) {
   const app = document.getElementById("app");
@@ -423,6 +423,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     loadRoute();
+});
 
 </script>
 
