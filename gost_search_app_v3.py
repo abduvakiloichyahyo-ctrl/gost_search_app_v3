@@ -99,145 +99,84 @@ TEMPLATE_INDEX = """<html>
 <title>ГОСТ База — Поиск по области ОС</title>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <style>
-body { font-family: "Segoe UI", sans-serif; margin: 0; color: #fff; overflow-y: auto; background: #000; }
-video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
-.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
-.container { position: relative; z-index: 2; width: 600px; margin: 50px auto; text-align: center; background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); }
-h1 { font-weight: 300; margin-bottom: 20px; }
-input[type=text] { padding: 10px; width: 65%; border: none; border-radius: 4px; outline: none; font-size: 16px; }
-button { padding: 10px 18px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+body { font-family: "Segoe UI", sans-serif; margin: 0; color: #fff; background: #000; }
+video#bgVideo { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: -1; }
+.container { width: 600px; margin: 50px auto; background: rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; backdrop-filter: blur(8px); }
+button { padding: 10px 18px; border: none; border-radius: 4px; background: #007bff; color: #fff; cursor: pointer; }
 button:hover { background: #0056b3; }
-a { text-decoration: none; color: #fff; margin: 0 10px; }
-a:hover { text-decoration: underline; }
-div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; text-align: left; }
-.mark { color: #00ffcc; font-size: 14px; }
+.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px; border-radius: 6px; text-align: left; }
 </style>
 </head>
+
 <body>
 
-<video autoplay muted loop id="bgVideo">
+<video autoplay muted loop playsinline preload="auto" id="bgVideo">
   <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
 </video>
 <div class="overlay"></div>
 
 <div class="container">
   <h1>🔍 Поиск по области ОС</h1>
-  <div style="margin-bottom:15px;">
-  <input type="text" id="tnved-input" placeholder="Поиск КОД ТН ВЭД или продукции...">
-  <button type="button" onclick="searchTNVED()" style="background:#17a2b8;">
-    ТН ВЭД
-  </button>
+
+  <!-- ТН ВЭД -->
+  <input type="text" id="tnved-input" placeholder="Поиск КОД ТН ВЭД или продукции">
+  <button onclick="searchTNVED()">ТН ВЭД</button>
+  <div id="tnved-results"></div>
+
+  <hr>
+
+  <!-- Регламент -->
+  <input type="text" id="reg-product" placeholder="Код ТН ВЭД">
+  <input type="number" id="reg-voltage" placeholder="Напряжение (В)">
+  <button onclick="checkRegulation()">Проверить</button>
+  <div id="reg-result"></div>
+
+  <hr>
+
+  <!-- SPA кнопки -->
+  <button onclick="loadSearch()">🔎 Поиск ГОСТ</button>
+  <button onclick="loadList()">📋 Список ГОСТов</button>
+  <button onclick="loadAdd()">➕ Добавить ГОСТ</button>
+
+  <!-- SPA контейнер -->
+  <div id="app"></div>
 </div>
 
-<div id="tnved-results"></div>
-
-<hr style="margin:25px 0;opacity:0.3;">
-
-<h2>⚖ Проверка КОД ТНВЭД по техрегламенту UzTR 216-042:2025</h2>
-
-<input type="text" id="reg-product" placeholder="Наименование товара">
-<br><br>
-<input type="number" id="reg-voltage" placeholder="Напряжение (В)">
-<br><br>
-<button onclick="checkRegulation()" style="background:#6f42c1;">
-  Проверить
-</button>
-
-<div id="reg-result" style="margin-top:15px;"></div>
-  
-
-<!-- 🔍 Поиск ГОСТ -->
-<form method="get">
-  <input type='text' name='q' value='{{ query }}' placeholder='Введите номер или маркировку ГОСТа...'>
-  <button type='submit'>Искать</button>
-</form>
-  <p>
-    <a href='{{ url_for("add_gost") }}'>➕ Добавить ГОСТ</a> |
-    <a href='{{ url_for("list_gosts") }}'>📋 Список ГОСТов</a>
-  </p>
-  {% if results %}
-  <h2>Результаты:</h2>
-  {% for gost, info in results.items() %}
-    <div class="result">
-      <b>{{ gost }}</b> <span class="mark">({{ info.mark }})</span><br>{{ info.text }}
-    </div>
-  {% endfor %}
-  {% elif query %}
-  <p>Ничего не найдено.</p>
-  {% endif %}
-</div>
 <script>
 /* ---------- ТН ВЭД ---------- */
 function searchTNVED() {
-    const input = document.getElementById("tnved-input");
-    const box = document.getElementById("tnved-results");
-    const q = input.value.trim();
-
-    box.innerHTML = "";
-    if (!q) return;
-
-    fetch("/api/tnved?q=" + encodeURIComponent(q))
-        .then(r => r.json())
-        .then(data => {
-            if (!data || Object.keys(data).length === 0) {
-                box.innerHTML = "<p>❌ Ничего не найдено</p>";
-                return;
-            }
-
-            for (const code in data) {
-                const item = data[code];
-                let html = `
-                  <div class="result">
-                    <b>КОД ТН ВЭД:</b> ${code}<br>
-                    <b>Наименование:</b> ${item.name || ""}
-                `;
-
-                if (item.standards && item.standards.length) {
-                    html += "<br><b>Стандарты:</b><ul>";
-                    item.standards.forEach(s => html += `<li>${s}</li>`);
-                    html += "</ul>";
-                }
-
-                html += "</div>";
-                box.innerHTML += html;
-            }
-        })
-        .catch(() => {
-            box.innerHTML = "<p>⚠ Ошибка запроса</p>";
-        });
+  fetch("/api/tnved?q=" + encodeURIComponent(tnved-input.value))
+    .then(r => r.json())
+    .then(d => {
+      tnved-results.innerHTML = Object.keys(d).length
+        ? Object.entries(d).map(([k,v]) =>
+            `<div class="result"><b>${k}</b><br>${v.name||""}</div>`
+          ).join("")
+        : "❌ Ничего не найдено";
+    });
 }
 
-/* ---------- ТЕХРЕГЛАМЕНТ ---------- */
+/* ---------- РЕГЛАМЕНТ ---------- */
 function checkRegulation() {
-    const product = document.getElementById("reg-product").value.trim();
-    const voltage = document.getElementById("reg-voltage").value.trim();
-    const box = document.getElementById("reg-result");
-
-    box.innerHTML = "";
-    if (!product) {
-        box.innerHTML = "<p>❌ Введите наименование товара</p>";
-        return;
-    }
-
-    fetch(`/api/regulation-check?q=${encodeURIComponent(product)}&v=${encodeURIComponent(voltage)}`)
-        .then(r => r.json())
-        .then(data => {
-            if (!data.applies) {
-                box.innerHTML = `<p style="color:#ff6b6b;">❌ ${data.reason}</p>`;
-                return;
-            }
-
-            box.innerHTML = `
-              <div class="result">
-                <b style="color:#90ee90;">✅ Подпадает под техрегламент</b>
-              </div>
-            `;
-        })
-        .catch(() => {
-            box.innerHTML = "<p>⚠ Ошибка проверки</p>";
-        });
+  fetch(`/api/regulation-check?q=${reg-product.value}&v=${reg-voltage.value}`)
+    .then(r => r.json())
+    .then(d => {
+      reg-result.innerHTML = d.applies
+        ? "<div class='result'>✅ Подпадает под регламент</div>"
+        : "❌ " + d.reason;
+    });
 }
+
+/* ---------- SPA ---------- */
+function loadPage(url) {
+  fetch(url).then(r => r.text()).then(html => app.innerHTML = html);
+}
+function loadSearch(){ loadPage("/api/search"); }
+function loadList(){ loadPage("/api/list-gosts"); }
+function loadAdd(){ loadPage("/api/add-gost"); }
 </script>
+
 </body>
 </html>"""
 
@@ -522,7 +461,16 @@ def regulation_check():
         "applies": False,
         "reason": ""
     }
-
+# ===== SPA ПОИСК ГОСТ (СТАВИТЬ ЗДЕСЬ) =====
+@app.route("/api/search")
+def api_search_page():
+    return """
+    <h2>🔎 Поиск ГОСТ</h2>
+    <input type="text" id="gost-q" placeholder="Введите ГОСТ или текст"
+           oninput="searchGostSPA()">
+    <div id="gost-results"></div>
+    """
+    
     # 1. Проверка: введён ли код
     if not query.isdigit() or len(query) < 6:
         result["reason"] = "Введите корректный код ТН ВЭД"
@@ -554,6 +502,7 @@ def regulation_check():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
