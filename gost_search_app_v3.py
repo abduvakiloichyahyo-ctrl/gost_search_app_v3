@@ -240,31 +240,43 @@ function deleteGost(gost) {
 function loadHome() {
     const app = document.getElementById("app");
     setAppContent(`
-      <h1>🔍 Поиск ГОСТ</h1>
-      <form id="gost-search-form">
-        <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width: 65%;">
-        <button type="submit">Искать</button>
-      </form>
-      <div id="gost-search-results"></div>
-      <hr style="margin:25px 0;opacity:0.3;">
-      <h2>🔎 Поиск КОД ТН ВЭД или продукции</h2>
-      <input type="text" id="tnved-input" placeholder="Введите код или наименование..." style="width: 65%;">
-      <button id="tnved-search-btn" style="background:#17a2b8;">ТН ВЭД</button>
-      <div id="tnved-results"></div>
-      <hr style="margin:25px 0;opacity:0.3;">
-      <h2>⚖ Проверка КОД ТНВЭД по техрегламенту UzTR 216-042:2025</h2>
-      <input type="text" id="reg-product" placeholder="Наименование товара" style="width: 65%;"><br><br>
-      <input type="number" id="reg-voltage" placeholder="Напряжение (В)">
-      <button id="reg-search-btn" style="background:#6f42c1;">Проверить</button>
-      <div id="reg-result" style="margin-top:15px;"></div>
-    `);
-    document.getElementById("gost-search-form").addEventListener("submit", function(e){
-        e.preventDefault();
-        searchGost();
-    });
-    document.getElementById("tnved-search-btn").addEventListener("click", searchTNVED);
-    document.getElementById("reg-search-btn").addEventListener("click", checkRegulation);
-}
+  <h1>🔍 Поиск ГОСТ</h1>
+  <form id="gost-search-form">
+    <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width: 65%;">
+    <button type="submit">Искать</button>
+  </form>
+  <div id="gost-search-results"></div>
+
+  <hr style="margin:25px 0;opacity:0.3;">
+
+  <h2>🔎 Поиск КОД ТН ВЭД или продукции</h2>
+  <input type="text" id="tnved-input" placeholder="Введите код или наименование..." style="width: 65%;">
+  <button id="tnved-search-btn" style="background:#17a2b8;">ТН ВЭД</button>
+  <div id="tnved-results"></div>
+
+  <hr style="margin:25px 0;opacity:0.3;">
+
+  <h2>⚖ Проверка КОД ТНВЭД по техрегламенту UzTR 216-042:2025</h2>
+  <input type="text" id="reg-product" placeholder="Наименование товара" style="width: 65%;"><br><br>
+  <input type="number" id="reg-voltage" placeholder="Напряжение (В)">
+  <button id="reg-search-btn" style="background:#6f42c1;">Проверить</button>
+  <div id="reg-result" style="margin-top:15px;"></div>
+`);
+
+// ⏱ ЖДЁМ, ПОКА setAppContent ВСТАВИТ HTML
+setTimeout(() => {
+    document.getElementById("gost-search-form")
+      ?.addEventListener("submit", e => {
+          e.preventDefault();
+          searchGost();
+      });
+
+    document.getElementById("tnved-search-btn")
+      ?.addEventListener("click", searchTNVED);
+
+    document.getElementById("reg-search-btn")
+      ?.addEventListener("click", checkRegulation);
+}, 170);
 
 // Функция загрузки списка ГОСТов
 function loadList() {
@@ -564,6 +576,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
