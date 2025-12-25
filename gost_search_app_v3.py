@@ -114,31 +114,102 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 <body>
 
 <video autoplay muted loop id="bgVideo">
-  <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+  <source id="bgSource" src="/static/background.mp4" type="video/mp4">
 </video>
 <div class="overlay"></div>
 <div class="container">
   <div style="margin-bottom:20px;">
+    <!-- 🔹 SPA навигация -->
     <a href="/" data-link style="font-size:18px;">🔍 Поиск ГОСТ</a>
     <a href="/list" data-link style="font-size:18px;">📋 Список ГОСТов</a>
     <a href="/add" data-link style="font-size:18px;">➕ Добавить ГОСТ</a>
+
+    <br><br>
+
+    <!-- 🎨 Управление фоном -->
+    <button onclick="setBackground('video1')">🎥 Фон 1</button>
+    <button onclick="setBackground('video2')">🎥 Фон 2</button>
+    <button onclick="setBackground('image')">🖼 Картинка</button>
+    <button onclick="setBackground('gradient')">🎨 Градиент</button>
   </div>
+
+  <!-- 👇 SPA-контент -->
   <div id="app"></div>
 </div>
 
 <script>
+/* ---------- SPA CACHE ---------- */
 const spaCache = {};
+/* 2️⃣ функции */
+function setAppContent(html) { ... }
+function setBackground(type) { ... }
+function loadPageCached(...) { ... }
+function loadList() { ... }
+function loadSearch() { ... }
+function editGost(...) { ... }
+function deleteGost(...) { ... }
 
+/* 3️⃣ SPA router */
+function loadRoute() { ... }
+window.addEventListener("popstate", loadRoute);
+
+/* 4️⃣ АВТОЗАПУСК ПОСЛЕ ЗАГРУЗКИ СТРАНИЦЫ */
+document.addEventListener("DOMContentLoaded", () => {
+    const saved = localStorage.getItem("site-bg");
+    if (saved) {
+        setBackground(saved);
+    }
+
+    loadRoute();   // если у тебя есть SPA-router
+});
+/* ---------- GLITCH CONTENT ---------- */
 function setAppContent(html) {
-    const app = document.getElementById("app");
+  const app = document.getElementById("app");
 
-    app.classList.remove("glitch");
-    void app.offsetWidth;
-    app.classList.add("glitch");
+  app.classList.remove("glitch");
+  void app.offsetWidth;   // принудительный reflow
+  app.classList.add("glitch");
 
-    setTimeout(() => {
-        app.innerHTML = html;   // ✅ ТОЛЬКО ТАК
-    }, 150);
+  setTimeout(() => {
+    app.innerHTML = html;   // ✅ правильно
+  }, 150);
+}
+
+/* ---------- BACKGROUND SWITCH ---------- */
+function setBackground(type) {
+  const video = document.getElementById("bgVideo");
+  const source = document.getElementById("bgSource");
+
+  // сбрасываем всё
+  video.style.display = "none";
+  document.body.style.background = "#000";
+
+  if (type === "video1") {
+    video.style.display = "block";
+    source.src = "/static/background.mp4";
+    video.load();
+    video.play();
+  }
+
+  if (type === "video2") {
+    video.style.display = "block";
+    source.src = "/static/background2.mp4";
+    video.load();
+    video.play();
+  }
+
+  if (type === "image") {
+    document.body.style.background =
+      "url('/static/bg.jpg') center / cover no-repeat fixed";
+  }
+
+  if (type === "gradient") {
+    document.body.style.background =
+      "linear-gradient(135deg, #1f0036, #3b0a45, #000)";
+  }
+
+  // 💾 сохраняем выбор
+  localStorage.setItem("site-bg", type);
 }
 
 /* ---------- SPA: КЕШ СТРАНИЦ ---------- */
@@ -375,6 +446,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     loadRoute();
 });
+
+
 </script>
 
 </body>
@@ -514,6 +587,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
