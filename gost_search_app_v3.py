@@ -132,14 +132,12 @@ const spaCache = {};
 function setAppContent(html) {
     const app = document.getElementById("app");
 
-    // запускаем glitch
     app.classList.remove("glitch");
-    void app.offsetWidth; // принудительный reflow
+    void app.offsetWidth;
     app.classList.add("glitch");
 
-    // меняем контент в середине анимации
     setTimeout(() => {
-        setAppContent(html);
+        app.innerHTML = html;   // ✅ ТОЛЬКО ТАК
     }, 150);
 }
 
@@ -192,7 +190,7 @@ function deleteGost(gost) {
 // Функция загрузки главной страницы (Поиск ГОСТ)
 function loadHome() {
     const app = document.getElementById("app");
-    setAppContent = `
+    setAppContent(`
       <h1>🔍 Поиск ГОСТ</h1>
       <form id="gost-search-form">
         <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width: 65%;">
@@ -210,7 +208,7 @@ function loadHome() {
       <input type="number" id="reg-voltage" placeholder="Напряжение (В)">
       <button id="reg-search-btn" style="background:#6f42c1;">Проверить</button>
       <div id="reg-result" style="margin-top:15px;"></div>
-    `;
+    `);
     document.getElementById("gost-search-form").addEventListener("submit", function(e){
         e.preventDefault();
         searchGost();
@@ -227,7 +225,7 @@ function loadList() {
 // Функция загрузки формы добавления ГОСТа
 function loadAdd() {
     const app = document.getElementById("app");
-    setAppContent = `
+    setAppContent(`
       <h1>➕ Добавить ГОСТ</h1>
       <form id="add-gost-form">
         <input type="text" name="gost_number" placeholder="Номер ГОСТа" required style="width: 65%;"><br><br>
@@ -236,7 +234,7 @@ function loadAdd() {
         <button type="submit">Добавить</button>
       </form>
       <div id="add-result" style="margin-top:15px;"></div>
-    `;
+    `);
     document.getElementById("add-gost-form").addEventListener("submit", function(e){
         e.preventDefault();
         const form = e.target;
@@ -516,6 +514,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
