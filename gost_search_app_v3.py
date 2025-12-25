@@ -73,6 +73,42 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
   opacity: 1;
   transform: translateY(0);
 }
+#app {
+  position: relative;
+  transition: opacity 0.25s ease;
+}
+
+#app.glitch {
+  animation: glitchFade 0.35s linear;
+}
+
+@keyframes glitchFade {
+  0% {
+    opacity: 1;
+    filter: none;
+    transform: translate(0);
+  }
+  20% {
+    opacity: 0.6;
+    filter: hue-rotate(20deg) contrast(1.4);
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    opacity: 0.4;
+    filter: hue-rotate(-20deg) contrast(1.6);
+    transform: translate(2px, -2px);
+  }
+  60% {
+    opacity: 0.6;
+    filter: hue-rotate(10deg) contrast(1.3);
+    transform: translate(-1px, 1px);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+    transform: translate(0);
+  }
+}
 </style>
 </head>
 <body>
@@ -93,40 +129,38 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 <script>
 const spaCache = {};
 
+function setAppContent(html) {
+    const app = document.getElementById("app");
+
+    // запускаем glitch
+    app.classList.remove("glitch");
+    void app.offsetWidth; // принудительный reflow
+    app.classList.add("glitch");
+
+    // меняем контент в середине анимации
+    setTimeout(() => {
+        setAppContent(html);
+    }, 150);
+}
+
 /* ---------- SPA: КЕШ СТРАНИЦ ---------- */
 function loadPageCached(url, cacheKey) {
     const app = document.getElementById("app");
 
-    // 1️⃣ плавно скрываем текущий контент
-    app.classList.remove("fade-in");
-    app.classList.add("fade-out");
+    if (spaCache[cacheKey]) {
+        setAppContent(spaCache[cacheKey]);
+        return;
+    }
 
-    setTimeout(() => {
-
-        // 2️⃣ если есть в кеше — берём оттуда
-        if (spaCache[cacheKey]) {
-            app.innerHTML = spaCache[cacheKey];
-            app.classList.remove("fade-out");
-            app.classList.add("fade-in");
-            return;
-        }
-
-        // 3️⃣ иначе — грузим с сервера
-        fetch(url)
-          .then(r => r.text())
-          .then(html => {
-              spaCache[cacheKey] = html;
-              app.innerHTML = html;
-              app.classList.remove("fade-out");
-              app.classList.add("fade-in");
-          })
-          .catch(() => {
-              app.innerHTML = "<p>⚠ Ошибка загрузки</p>";
-              app.classList.remove("fade-out");
-              app.classList.add("fade-in");
-          });
-
-    }, 200); // ⏱ время совпадает с CSS transition
+    fetch(url)
+      .then(r => r.text())
+      .then(html => {
+          spaCache[cacheKey] = html;
+          setAppContent(html);
+      })
+      .catch(() => {
+          setAppContent("<p>⚠ Ошибка загрузки</p>");
+      });
 }
 
 /* ---------- SPA: РЕДАКТИРОВАНИЕ ---------- */
@@ -158,7 +192,7 @@ function deleteGost(gost) {
 // Функция загрузки главной страницы (Поиск ГОСТ)
 function loadHome() {
     const app = document.getElementById("app");
-    app.innerHTML = `
+    setAppContent = `
       <h1>🔍 Поиск ГОСТ</h1>
       <form id="gost-search-form">
         <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width: 65%;">
@@ -193,7 +227,7 @@ function loadList() {
 // Функция загрузки формы добавления ГОСТа
 function loadAdd() {
     const app = document.getElementById("app");
-    app.innerHTML = `
+    setAppContent = `
       <h1>➕ Добавить ГОСТ</h1>
       <form id="add-gost-form">
         <input type="text" name="gost_number" placeholder="Номер ГОСТа" required style="width: 65%;"><br><br>
@@ -482,6 +516,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
