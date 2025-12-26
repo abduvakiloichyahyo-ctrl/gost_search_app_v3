@@ -310,8 +310,10 @@ function loadAdd() {
         .then(r => r.json())
         .then(res => {
             if (res.success) {
-                window.history.pushState(null, "", "/list");
-                loadRoute();
+    delete spaCache["list"];   // 🔥 ВАЖНО
+    window.history.pushState(null, "", "/list");
+    loadRoute();
+}
             } else {
                 document.getElementById("add-result").innerHTML = "<p>❌ " + (res.error || "Ошибка") + "</p>";
             }
@@ -576,6 +578,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
