@@ -287,49 +287,49 @@ function loadAdd() {
     }, 170);
 }
 // Функция загрузки списка ГОСТов
+function loadHome() {
+    setAppContent(`
+      <h1>🔍 Поиск ГОСТ</h1>
+
+      <form id="gost-search-form">
+        <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width:70%;">
+        <button type="submit">Искать</button>
+      </form>
+      <div id="gost-search-results"></div>
+
+      <hr style="margin:25px 0;opacity:0.3;">
+
+      <h2>🔎 Поиск КОД ТН ВЭД</h2>
+      <input type="text" id="tnved-input" placeholder="Код или наименование" style="width:70%;">
+      <button id="tnved-search-btn" style="background:#17a2b8;">ТН ВЭД</button>
+      <div id="tnved-results"></div>
+
+      <hr style="margin:25px 0;opacity:0.3;">
+
+      <h2>⚖ Проверка по техрегламенту</h2>
+      <input type="text" id="reg-product" placeholder="Код ТН ВЭД" style="width:70%;"><br><br>
+      <input type="number" id="reg-voltage" placeholder="Напряжение (В)">
+      <button id="reg-search-btn" style="background:#6f42c1;">Проверить</button>
+      <div id="reg-result" style="margin-top:15px;"></div>
+    `);
+
+    // ⏱ навешиваем события ПОСЛЕ рендера
+    setTimeout(() => {
+        document.getElementById("gost-search-form")
+          ?.addEventListener("submit", e => {
+              e.preventDefault();
+              searchGost();
+          });
+
+        document.getElementById("tnved-search-btn")
+          ?.addEventListener("click", searchTNVED);
+
+        document.getElementById("reg-search-btn")
+          ?.addEventListener("click", checkRegulation);
+    }, 170);
+}
 function loadList() {
     loadPageCached("/api/list-gosts", "list");
-}
-
-// Функция загрузки формы добавления ГОСТа
-function loadAdd() {
-    const app = document.getElementById("app");
-    setAppContent(`
-      <h1>➕ Добавить ГОСТ</h1>
-      <form id="add-gost-form">
-        <input type="text" name="gost_number" placeholder="Номер ГОСТа" required style="width: 65%;"><br><br>
-        <input type="text" name="gost_mark" placeholder="Маркировка ГОСТа"><br><br>
-        <input type="text" name="gost_text" placeholder="Описание/текст ГОСТа" required><br><br>
-        <button type="submit">Добавить</button>
-      </form>
-      <div id="add-result" style="margin-top:15px;"></div>
-    `);
-    document.getElementById("add-gost-form").addEventListener("submit", function(e){
-        e.preventDefault();
-        const form = e.target;
-        const number = form.gost_number.value.trim();
-        const mark = form.gost_mark.value.trim();
-        const text = form.gost_text.value.trim();
-        fetch("/api/add-gost", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ gost_number: number, gost_mark: mark, gost_text: text })
-        })
-        .then(r => r.json())
-        .then(res => {
-    if (res.success) {
-        delete spaCache["list"];   // 🔥 сброс кеша
-        window.history.pushState(null, "", "/list");
-        loadRoute();
-    } else {
-        document.getElementById("add-result").innerHTML =
-          "<p>❌ " + (res.error || "Ошибка") + "</p>";
-    }
-})
-        .catch(() => {
-            document.getElementById("add-result").innerHTML = "<p>⚠ Ошибка запроса</p>";
-        });
-    });
 }
 
 // Функция поиска ГОСТ
