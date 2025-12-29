@@ -139,6 +139,38 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 
 <script>
 const spaCache = {};
+
+function uploadImage(gost) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("gost", gost);
+        formData.append("image", file);
+
+        fetch("/api/upload-gost-image", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                delete spaCache["list"];   // ♻️ обновить список
+                loadList();
+            } else {
+                alert(res.error || "Ошибка загрузки");
+            }
+        });
+    };
+
+    input.click();
+}
+
    
 /* ---------- GLITCH CONTENT ---------- */
 function setAppContent(html) {
@@ -456,6 +488,39 @@ document.addEventListener('DOMContentLoaded', function() {
 def index():
     return render_template_string(TEMPLATE_INDEX)
 
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route("/api/upload-gost-image", methods=["POST"])
+def upload_gost_image():
+    gost = request.form.get("gost")
+    file = request.files.get("image")
+
+    if not gost or not file:
+        return {"success": False, "error": "Нет данных"}
+
+    if not allowed_file(file.filename):
+        return {"success": False, "error": "Недопустимый формат"}
+
+    filename = secure_filename(f"{gost}.jpg")
+    path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(path)
+
+    data = load_data()
+    if gost not in data:
+        return {"success": False, "error": "ГОСТ не найден"}
+
+    data[gost]["image"] = "/" + path.replace("\\", "/")
+    save_data(data)
+
+    return {"success": True, "image": data[gost]["image"]}
+
 @app.route("/api/list-gosts")
 def api_list_gosts():
     data = load_data()
@@ -464,12 +529,24 @@ def api_list_gosts():
     for gost, info in data.items():
         text = info.get("text", "")
         mark = info.get("mark", "")
+        image = info.get("image", "/static/images/no-image.png")
+
         html += f"""
-        <div class="result">
-          <b>{gost}</b> <span class="mark">({mark})</span><br>
-          {text}<br><br>
-          <button onclick="editGost('{gost}')">✏️ Редактировать</button>
-          <button onclick="deleteGost('{gost}')" style="background:#dc3545;">🗑 Удалить</button>
+        <div class="result gost-card">
+          <img src="{image}"
+               style="width:120px;height:90px;object-fit:cover;
+                      border-radius:8px;margin-right:12px;">
+
+          <div>
+            <b>{gost}</b> <span class="mark">({mark})</span><br>
+            {text}<br><br>
+
+            <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
+            <button onclick="editGost('{gost}')">✏️ Редактировать</button>
+            <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
+              🗑 Удалить
+            </button>
+          </div>
         </div>
         """
 
@@ -586,6 +663,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
