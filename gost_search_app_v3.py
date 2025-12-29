@@ -557,7 +557,7 @@ def api_list_gosts():
         </div>
         """
 
-       return html
+    return html
 
 @app.route("/api/get-gost/<gost>")
 def api_get_gost(gost):
@@ -670,6 +670,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
