@@ -538,7 +538,7 @@ def api_list_gosts():
         mark = info.get("mark", "")
         image = info.get("image", "/static/images/no-image.png")
 
-       html += f"""
+       hhtml += f"""
 <div class="result gost-card">
 
   <div class="gost-info">
@@ -672,6 +672,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
