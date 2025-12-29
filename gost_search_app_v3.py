@@ -108,24 +108,13 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
     filter: none;
     transform: translate(0);
   }
+}   /* 👈 ВОТ ЭТОЙ СКОБКИ НЕ ХВАТАЛО */
+
 .gost-card {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-}
-
-.gost-info {
-  flex: 1;
-}
-
-.gost-image img {
-  width: 260px;       /* 👈 КРУПНАЯ КАРТИНКА */
-  height: 180px;
-  object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.4);
-  background: #111; 
 }
 </style>
 </head>
@@ -683,6 +672,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
