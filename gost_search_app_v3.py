@@ -538,28 +538,26 @@ def api_list_gosts():
         mark = info.get("mark", "")
         image = info.get("image", "/static/images/no-image.png")
 
-       html += f"""
-<div class="result gost-card">
+        html += f"""
+        <div class="result gost-card">
+            <div class="gost-info">
+                <b>{gost}</b> <span class="mark">({mark})</span><br>
+                {text}<br><br>
 
-  <div class="gost-info">
-    <b>{gost}</b> <span class="mark">({mark})</span><br>
-    {text}<br><br>
+                <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
+                <button onclick="editGost('{gost}')">✏️ Редактировать</button>
+                <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
+                    🗑 Удалить
+                </button>
+            </div>
 
-    <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
-    <button onclick="editGost('{gost}')">✏️ Редактировать</button>
-    <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
-      🗑 Удалить
-    </button>
-  </div>
+            <div class="gost-image">
+                <img src="{image}">
+            </div>
+        </div>
+        """
 
-  <div class="gost-image">
-    <img src="{image}" alt="Продукция">
-  </div>
-
-</div>
-"""
-
-    return html
+       return html
 
 @app.route("/api/get-gost/<gost>")
 def api_get_gost(gost):
@@ -672,6 +670,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
