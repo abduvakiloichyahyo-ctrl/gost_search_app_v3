@@ -160,6 +160,14 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
   align-items: flex-start;
   gap: 20px;
 }
+/* ---------- СКРЫТИЕ ПРАВОЙ ПАНЕЛИ ---------- */
+.hide-image #image-panel {
+  display: none;
+}
+
+.hide-image.container {
+  grid-template-columns: 1fr;
+}
 </style>
 </head>
 <body>
@@ -187,6 +195,11 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
       <button onclick="setBackground('image')">🖼 Картинка</button>
       <button onclick="setBackground('gradient')">🎨 Градиент</button>
     </div>
+    <button id="toggle-image-btn"
+        onclick="toggleImagePanel()"
+        style="margin-bottom:15px;">
+  👁 Скрыть изображение
+</button>
 
     <!-- 👇 SPA-контент -->
     <div id="app"></div>
@@ -258,6 +271,24 @@ function setAppContent(html) {
   setTimeout(() => {
     app.innerHTML = html;   // ✅ правильно
   }, 150);
+}
+
+function toggleImagePanel() {
+    const container = document.querySelector(".container");
+    const btn = document.getElementById("toggle-image-btn");
+
+    container.classList.toggle("hide-image");
+
+    const hidden = container.classList.contains("hide-image");
+    btn.innerText = hidden
+        ? "👁 Показать изображение"
+        : "👁 Скрыть изображение";
+
+    // 💾 сохраняем состояние
+    localStorage.setItem(
+        "hide-image-panel",
+        hidden ? "1" : "0"
+    );
 }
 
 /* ---------- BACKGROUND SWITCH ---------- */
@@ -542,8 +573,18 @@ function loadRoute() {
     }
 }
 
-window.addEventListener('popstate', loadRoute);
 document.addEventListener('DOMContentLoaded', function() {
+
+    // 🔁 восстановление скрытой панели
+    const hidden = localStorage.getItem("hide-image-panel") === "1";
+    const container = document.querySelector(".container");
+    const btn = document.getElementById("toggle-image-btn");
+
+    if (hidden && container && btn) {
+        container.classList.add("hide-image");
+        btn.innerText = "👁 Показать изображение";
+    }
+
     document.querySelectorAll('a[data-link]').forEach(a => {
         a.addEventListener('click', function(e) {
             e.preventDefault();
@@ -551,6 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loadRoute();
         });
     });
+
     loadRoute();
 });
 
