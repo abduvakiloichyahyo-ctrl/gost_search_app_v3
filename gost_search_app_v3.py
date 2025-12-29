@@ -108,6 +108,24 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
     filter: none;
     transform: translate(0);
   }
+.gost-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.gost-info {
+  flex: 1;
+}
+
+.gost-image img {
+  width: 260px;       /* 👈 КРУПНАЯ КАРТИНКА */
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  background: #111; 
 }
 </style>
 </head>
@@ -531,24 +549,26 @@ def api_list_gosts():
         mark = info.get("mark", "")
         image = info.get("image", "/static/images/no-image.png")
 
-        html += f"""
-        <div class="result gost-card">
-          <img src="{image}"
-               style="width:120px;height:90px;object-fit:cover;
-                      border-radius:8px;margin-right:12px;">
+       html += f"""
+<div class="result gost-card">
 
-          <div>
-            <b>{gost}</b> <span class="mark">({mark})</span><br>
-            {text}<br><br>
+  <div class="gost-info">
+    <b>{gost}</b> <span class="mark">({mark})</span><br>
+    {text}<br><br>
 
-            <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
-            <button onclick="editGost('{gost}')">✏️ Редактировать</button>
-            <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
-              🗑 Удалить
-            </button>
-          </div>
-        </div>
-        """
+    <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
+    <button onclick="editGost('{gost}')">✏️ Редактировать</button>
+    <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
+      🗑 Удалить
+    </button>
+  </div>
+
+  <div class="gost-image">
+    <img src="{image}" alt="Продукция">
+  </div>
+
+</div>
+"""
 
     return html
 
@@ -663,6 +683,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
