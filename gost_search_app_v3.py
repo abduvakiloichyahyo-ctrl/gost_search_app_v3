@@ -47,7 +47,6 @@ TEMPLATE_INDEX = """<html>
 body { font-family: "Segoe UI", sans-serif; margin: 0; color: #fff; background: #000; overflow-y: auto; }
 video#bgVideo { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; object-fit: cover; z-index: -2; }
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index: -1; }
-.container { position: relative; z-index: 2; width: 600px; margin: 60px auto; padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); }
 h1, h2 { font-weight: 300; }
 h1 { margin-top: 0; }
 input[type=text], input[type=number] { padding: 10px; width: 70%; border: none; border-radius: 4px; outline: none; font-size: 16px; }
@@ -59,6 +58,51 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 .mark { color: #00ffcc; font-size: 14px; }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
+
+#content-column {
+  min-width: 0;          /* 🔥 КРИТИЧЕСКИ ВАЖНО */
+  overflow-wrap: break-word;
+}
+#image-panel {
+  width: 420px;
+  flex-shrink: 0;
+}
+
+/* основной layout */
+.container {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 30px;
+
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 20px;
+
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+}
+
+/* правая панель */
+#image-panel {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  background: rgba(0,0,0,0.35);
+  border-radius: 16px;
+  padding: 15px;
+}
+
+#image-panel img {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #111;
+}
+
 /* ---------- SPA АНИМАЦИИ ---------- */
 #app {
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -125,27 +169,50 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 </video>
 <div class="overlay"></div>
 <div class="container">
-  <div style="margin-bottom:20px;">
-    <!-- 🔹 SPA навигация -->
-    <a href="/" data-link style="font-size:18px;">🔍 Поиск ГОСТ</a>
-    <a href="/list" data-link style="font-size:18px;">📋 Список ГОСТов</a>
-    <a href="/add" data-link style="font-size:18px;">➕ Добавить ГОСТ</a>
 
-    <br><br>
+  <!-- 🔹 ЛЕВАЯ КОЛОНКА -->
+  <div id="content-column">
 
-    <!-- 🎨 Управление фоном -->
-    <button onclick="setBackground('video1')">🎥 Фон 1</button>
-    <button onclick="setBackground('video2')">🎥 Фон 2</button>
-    <button onclick="setBackground('image')">🖼 Картинка</button>
-    <button onclick="setBackground('gradient')">🎨 Градиент</button>
+    <div style="margin-bottom:20px;">
+      <!-- 🔹 SPA навигация -->
+      <a href="/" data-link style="font-size:18px;">🔍 Поиск ГОСТ</a>
+      <a href="/list" data-link style="font-size:18px;">📋 Список ГОСТов</a>
+      <a href="/add" data-link style="font-size:18px;">➕ Добавить ГОСТ</a>
+
+      <br><br>
+
+      <!-- 🎨 Управление фоном -->
+      <button onclick="setBackground('video1')">🎥 Фон 1</button>
+      <button onclick="setBackground('video2')">🎥 Фон 2</button>
+      <button onclick="setBackground('image')">🖼 Картинка</button>
+      <button onclick="setBackground('gradient')">🎨 Градиент</button>
+    </div>
+
+    <!-- 👇 SPA-контент -->
+    <div id="app"></div>
+
   </div>
 
-  <!-- 👇 SPA-контент -->
-  <div id="app"></div>
+  <!-- 🔹 ПРАВАЯ КОЛОНКА -->
+  <div id="image-panel">
+    <img id="preview-image" src="/static/images/no-image.png">
+  </div>
+
 </div>
 
 <script>
 const spaCache = {};
+
+function showImage(src) {
+    const img = document.getElementById("preview-image");
+
+    if (!src) {
+        img.src = "/static/images/no-image.png";
+        return;
+    }
+
+    img.src = src;
+}
 
 function uploadImage(gost) {
     const input = document.createElement("input");
@@ -167,6 +234,7 @@ function uploadImage(gost) {
         .then(r => r.json())
         .then(res => {
             if (res.success) {
+            showImage(res.image);
                 delete spaCache["list"];   // ♻️ обновить список
                 loadList();
             } else {
@@ -539,22 +607,17 @@ def api_list_gosts():
         image = info.get("image", "/static/images/no-image.png")
 
         html += f"""
-        <div class="result gost-card">
-            <div class="gost-info">
-                <b>{gost}</b> <span class="mark">({mark})</span><br>
-                {text}<br><br>
+<div class="result">
+  <b>{gost}</b> <span class="mark">({mark})</span><br>
+  {text}<br><br>
 
-                <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
-                <button onclick="editGost('{gost}')">✏️ Редактировать</button>
-                <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
-                    🗑 Удалить
-                </button>
-            </div>
-
-            <div class="gost-image">
-                <img src="{image}">
-            </div>
-        </div>
+  <button onclick="showImage('{image}')">👁 Показать</button>
+  <button onclick="uploadImage('{gost}')">🖼 Изображение</button>
+  <button onclick="editGost('{gost}')">✏️ Редактировать</button>
+  <button onclick="deleteGost('{gost}')" style="background:#dc3545;">
+    🗑 Удалить
+  </button>
+</div>
         """
 
     return html
@@ -670,6 +733,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
