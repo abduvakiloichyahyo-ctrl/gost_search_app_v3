@@ -204,6 +204,8 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
       <a href="/" data-link style="font-size:18px;">🔍 Поиск ГОСТ</a>
       <a href="/list" data-link style="font-size:18px;">📋 Список ГОСТов</a>
       <a href="/add" data-link style="font-size:18px;">➕ Добавить ГОСТ</a>
+      <a href="/stats" data-link style="font-size:18px;">📊 Статистика</a>
+
 
       <br><br>
 
@@ -248,6 +250,53 @@ function showImage(src) {
 
     img.src = src;
 img.onclick = () => openLightbox(src);
+}
+
+function showImage(src, gost = null) {
+    const img = document.getElementById("preview-image");
+
+    img.src = src || "/static/images/no-image.png";
+
+    if (gost) {
+        trackView(gost);
+    }
+}
+
+function trackView(gost) {
+    const stats = JSON.parse(localStorage.getItem("gost-views") || "{}");
+    stats[gost] = (stats[gost] || 0) + 1;
+    localStorage.setItem("gost-views", JSON.stringify(stats));
+}
+
+function loadStats() {
+    fetch("/api/stats")
+      .then(r => r.json())
+      .then(data => {
+          const views = JSON.parse(localStorage.getItem("gost-views") || "{}");
+
+          const top = Object.entries(views)
+            .sort((a,b) => b[1] - a[1])
+            .slice(0,5);
+
+          let html = `
+            <h2>📊 Статистика</h2>
+            <p><b>Всего ГОСТов:</b> ${data.total}</p>
+            <p><b>С картинками:</b> ${data.with_images}</p>
+            <p><b>Без картинок:</b> ${data.without_images}</p>
+
+            <h3>🔥 Самые просматриваемые</h3>
+          `;
+
+          if (top.length === 0) {
+              html += "<p>Пока нет данных</p>";
+          } else {
+              top.forEach(([gost, count]) => {
+                  html += `<div class="result">${gost} — ${count} просмотров</div>`;
+              });
+          }
+
+          setAppContent(html);
+      });
 }
 
 function uploadImage(gost) {
@@ -382,6 +431,7 @@ function editGost(gost) {
           <textarea id="edit-text" rows="5" style="width:100%;">${data.text || ""}</textarea><br><br>
           <button onclick="saveGostEdit('${gost}')">💾 Сохранить</button>
           <button onclick="loadList()">⬅ Назад</button>
+          <button onclick="showImage('{image}', '{gost}')">👁 Показать</button>
         `);
       });
 }
@@ -612,6 +662,8 @@ function loadRoute() {
     } else {
         loadHome();
     }
+    if (path === "/stats") 
+        loadStats();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -656,6 +708,19 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route("/api/stats")
+def api_stats():
+    data = load_data()
+
+    total = len(data)
+    with_images = sum(1 for g in data.values() if g.get("image"))
+    without_images = total - with_images
+
+    return {
+        "total": total,
+        "with_images": with_images,
+        "without_images": without_images
+    }
 
 @app.route("/api/upload-gost-image", methods=["POST"])
 def upload_gost_image():
@@ -818,6 +883,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
