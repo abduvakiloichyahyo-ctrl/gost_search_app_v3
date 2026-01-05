@@ -488,7 +488,11 @@ function searchGost() {
               const info = data[gost];
               const text = info.text || "";
               const mark = info.mark || "";
-              html += `<div class="result"><b>${gost}</b> <span class="mark">(${mark})</span><br>${text}</div>`;
+              html += `<div class="result">
+  <b>${highlightText(gost, q)}</b>
+  <span class="mark">(${highlightText(mark, q)})</span><br>
+  ${highlightText(text, q)}
+</div>`;
           }
           box.innerHTML = html;
       })
@@ -775,6 +779,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
