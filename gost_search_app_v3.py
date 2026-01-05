@@ -59,6 +59,13 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 
+.highlight {
+  background: rgba(255, 255, 0, 0.35);
+  color: #fff;
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
 #lightbox {
   position: fixed;
   inset: 0;
@@ -239,6 +246,15 @@ const spaCache = {};
 document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeLightbox();
 });
+
+function highlightText(text, query) {
+    if (!query || !text) return text;
+
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escaped})`, "gi");
+
+    return text.replace(regex, '<span class="highlight">$1</span>');
+}
 
 function showImage(src) {
     const img = document.getElementById("preview-image");
@@ -883,6 +899,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
