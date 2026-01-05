@@ -59,6 +59,24 @@ div.result { background: rgba(255,255,255,0.1); padding: 10px; margin-top: 10px;
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 
+#lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  cursor: zoom-out;
+}
+
+#lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
 #content-column {
   min-width: 0;          /* 🔥 КРИТИЧЕСКИ ВАЖНО */
   overflow-wrap: break-word;
@@ -216,6 +234,10 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 <script>
 const spaCache = {};
 
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeLightbox();
+});
+
 function showImage(src) {
     const img = document.getElementById("preview-image");
 
@@ -225,6 +247,7 @@ function showImage(src) {
     }
 
     img.src = src;
+img.onclick = () => openLightbox(src);
 }
 
 function uploadImage(gost) {
@@ -361,6 +384,20 @@ function editGost(gost) {
           <button onclick="loadList()">⬅ Назад</button>
         `);
       });
+}
+
+function openLightbox(src) {
+    if (!src) return;
+
+    const lb = document.getElementById("lightbox");
+    const img = document.getElementById("lightbox-img");
+
+    img.src = src;
+    lb.style.display = "flex";
+}
+
+function closeLightbox() {
+    document.getElementById("lightbox").style.display = "none";
 }
 
 /* ---------- SPA: УДАЛЕНИЕ ---------- */
@@ -601,7 +638,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img">
+</div>
 </body>
 </html>"""
 
@@ -779,6 +818,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
