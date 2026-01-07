@@ -440,40 +440,43 @@ function loadAdd() {
     `);
 
     setTimeout(() => {
-        document.getElementById("add-gost-form")
-          ?.addEventListener("submit", function(e){
-              e.preventDefault();
+        const form = document.getElementById("add-gost-form");
+        if (!form) return;
 
-              const form = e.target;
-              const number = form.gost_number.value.trim();
-              const mark = form.gost_mark.value.trim();
-              const text = form.gost_text.value.trim();
+        form.addEventListener("submit", function(e){
+            e.preventDefault();
 
-              fetch("/api/add-gost", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                      gost_number: number,
-                      gost_mark: mark,
-                      gost_text: text
-                  })
-              })
-              .then(r => r.json())
-              .then(res => {
-                  if (res.success) {
-                      delete spaCache["list"];
-                      window.history.pushState(null, "", "/list");
-                      loadRoute();
-                  } else {
-                      document.getElementById("add-result").innerHTML =
+            const number = form.gost_number.value.trim();
+            const mark = form.gost_mark.value.trim();
+            const text = form.gost_text.value.trim();
+
+            fetch("/api/add-gost", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    gost_number: number,
+                    gost_mark: mark,
+                    gost_text: text
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    delete spaCache["list"];
+                    window.history.pushState(null, "", "/list");
+                    loadRoute();
+                } else {
+                    document.getElementById("add-result").innerHTML =
                         "<p>❌ " + (res.error || "Ошибка") + "</p>";
-                  }
-              })
-              .catch(() => {
-                  document.getElementById("add-result").innerHTML =
+                }
+            })
+            .catch(() => {
+                document.getElementById("add-result").innerHTML =
                     "<p>⚠ Ошибка запроса</p>";
-              });
-          });
+            });
+        });
+    }, 50);
+}
 
 // Функция загрузки списка ГОСТов
 function loadHome() {
@@ -818,6 +821,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
