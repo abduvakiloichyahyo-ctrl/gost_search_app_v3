@@ -66,24 +66,6 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
   border-radius: 3px;
 }
 
-#lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  cursor: zoom-out;
-}
-
-#lightbox img {
-  max-width: 90%;
-  max-height: 90%;
-  object-fit: contain;
-  border-radius: 12px;
-}
-
 #content-column {
   min-width: 0;          /* 🔥 КРИТИЧЕСКИ ВАЖНО */
   overflow-wrap: break-word;
@@ -241,18 +223,14 @@ th, td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
 <script>
 const spaCache = {};
 
-document.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeLightbox();
-});
 function highlightText(text, query) {
-    if (typeof text !== "string" || !query) return text || "";
+    if (!query) return text;
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`(${escaped})`, "gi");
 
     return text.replace(regex, '<span class="highlight">$1</span>');
 }
-
 function showImage(src) {
     const img = document.getElementById("preview-image");
 
@@ -262,7 +240,6 @@ function showImage(src) {
     }
 
     img.src = src;
-img.onclick = () => openLightbox(src);
 }
 
 function uploadImage(gost) {
@@ -401,20 +378,6 @@ function editGost(gost) {
       });
 }
 
-function openLightbox(src) {
-    if (!src) return;
-
-    const lb = document.getElementById("lightbox");
-    const img = document.getElementById("lightbox-img");
-
-    img.src = src;
-    lb.style.display = "flex";
-}
-
-function closeLightbox() {
-    document.getElementById("lightbox").style.display = "none";
-}
-
 /* ---------- SPA: УДАЛЕНИЕ ---------- */
 function deleteGost(gost) {
   if (!confirm("Удалить ГОСТ " + gost + "?")) return;
@@ -440,54 +403,51 @@ function loadAdd() {
     `);
 
     setTimeout(() => {
-        const form = document.getElementById("add-gost-form");
-        if (!form) return;
+        document.getElementById("add-gost-form")
+          ?.addEventListener("submit", function(e){
+              e.preventDefault();
 
-        form.addEventListener("submit", function(e){
-            e.preventDefault();
+              const form = e.target;
+              const number = form.gost_number.value.trim();
+              const mark = form.gost_mark.value.trim();
+              const text = form.gost_text.value.trim();
 
-            const number = form.gost_number.value.trim();
-            const mark = form.gost_mark.value.trim();
-            const text = form.gost_text.value.trim();
-
-            fetch("/api/add-gost", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    gost_number: number,
-                    gost_mark: mark,
-                    gost_text: text
-                })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success) {
-                    delete spaCache["list"];
-                    window.history.pushState(null, "", "/list");
-                    loadRoute();
-                } else {
-                    document.getElementById("add-result").innerHTML =
+              fetch("/api/add-gost", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                      gost_number: number,
+                      gost_mark: mark,
+                      gost_text: text
+                  })
+              })
+              .then(r => r.json())
+              .then(res => {
+                  if (res.success) {
+                      delete spaCache["list"];
+                      window.history.pushState(null, "", "/list");
+                      loadRoute();
+                  } else {
+                      document.getElementById("add-result").innerHTML =
                         "<p>❌ " + (res.error || "Ошибка") + "</p>";
-                }
-            })
-            .catch(() => {
-                document.getElementById("add-result").innerHTML =
+                  }
+              })
+              .catch(() => {
+                  document.getElementById("add-result").innerHTML =
                     "<p>⚠ Ошибка запроса</p>";
-            });
-        });
-    }, 50);
+              });
+          });
+    }, 170);
 }
-
 // Функция загрузки списка ГОСТов
 function loadHome() {
     setAppContent(`
       <h1>🔍 Поиск ГОСТ</h1>
 
-      <input type="text" id="gost-input"
-        placeholder="Введите номер или маркировку ГОСТа..."
-        style="width:70%;">
-
-      <button onclick="searchGost()">Искать</button>
+      <form id="gost-search-form">
+        <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width:70%;">
+        <button type="submit">Искать</button>
+      </form>
       <div id="gost-search-results"></div>
 
       <hr style="margin:25px 0;opacity:0.3;">
@@ -506,7 +466,22 @@ function loadHome() {
       <div id="reg-result" style="margin-top:15px;"></div>
     `);
 
- function loadList() {
+    // ⏱ навешиваем события ПОСЛЕ рендера
+    setTimeout(() => {
+        document.getElementById("gost-search-form")
+          ?.addEventListener("submit", e => {
+              e.preventDefault();
+              searchGost();
+          });
+
+        document.getElementById("tnved-search-btn")
+          ?.addEventListener("click", searchTNVED);
+
+        document.getElementById("reg-search-btn")
+          ?.addEventListener("click", checkRegulation);
+    }, 170);
+}
+function loadList() {
     loadPageCached("/api/list-gosts", "list");
 }
 
@@ -528,11 +503,7 @@ function searchGost() {
               const info = data[gost];
               const text = info.text || "";
               const mark = info.mark || "";
-              html += `<div class="result">
-  <b>${highlightText(gost, q)}</b>
-  <span class="mark">(${highlightText(mark, q)})</span><br>
-  ${highlightText(text, q)}
-</div>`;
+              html += `<div class="result"><b>${gost}</b> <span class="mark">(${mark})</span><br>${text}</div>`;
           }
           box.innerHTML = html;
       })
@@ -641,9 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-<div id="lightbox" onclick="closeLightbox()">
-  <img id="lightbox-img">
-</div>
+
 </body>
 </html>"""
 
@@ -708,7 +677,7 @@ def api_list_gosts():
 </div>
         """
 
-    return html
+    return jsonify(results)
 
 @app.route("/api/get-gost/<gost>")
 def api_get_gost(gost):
@@ -821,13 +790,6 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
 
 
 
