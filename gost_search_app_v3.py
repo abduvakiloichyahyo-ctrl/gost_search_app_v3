@@ -474,8 +474,7 @@ function loadAdd() {
                     "<p>⚠ Ошибка запроса</p>";
               });
           });
-    }, 170);
-}
+
 // Функция загрузки списка ГОСТов
 function loadHome() {
     setAppContent(`
@@ -504,17 +503,7 @@ function loadHome() {
       <div id="reg-result" style="margin-top:15px;"></div>
     `);
 
-    // навешиваем события ПОСЛЕ рендера
-    setTimeout(() => {
-        document.getElementById("tnved-search-btn")
-          ?.addEventListener("click", searchTNVED);
-
-        document.getElementById("reg-search-btn")
-          ?.addEventListener("click", checkRegulation);
-    }, 50);
-}
-
-function loadList() {
+ function loadList() {
     loadPageCached("/api/list-gosts", "list");
 }
 
@@ -829,6 +818,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
