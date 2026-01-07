@@ -245,7 +245,7 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeLightbox();
 });
 function highlightText(text, query) {
-    if (!text || !query) return text;
+    if (typeof text !== "string" || !query) return text || "";
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`(${escaped})`, "gi");
@@ -481,10 +481,11 @@ function loadHome() {
     setAppContent(`
       <h1>🔍 Поиск ГОСТ</h1>
 
-      <form id="gost-search-form">
-        <input type="text" id="gost-input" placeholder="Введите номер или маркировку ГОСТа..." style="width:70%;">
-        <button type="submit">Искать</button>
-      </form>
+      <input type="text" id="gost-input"
+  placeholder="Введите номер или маркировку ГОСТа..."
+  style="width:70%;">
+
+<button onclick="searchGost()">Искать</button>
       <div id="gost-search-results"></div>
 
       <hr style="margin:25px 0;opacity:0.3;">
@@ -503,13 +504,6 @@ function loadHome() {
       <div id="reg-result" style="margin-top:15px;"></div>
     `);
 
-    // ⏱ навешиваем события ПОСЛЕ рендера
-    setTimeout(() => {
-        document.getElementById("gost-search-form")
-          ?.addEventListener("submit", e => {
-              e.preventDefault();
-              searchGost();
-          });
 
         document.getElementById("tnved-search-btn")
           ?.addEventListener("click", searchTNVED);
@@ -833,6 +827,7 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
